@@ -1,0 +1,6 @@
+usr/local/bin/utopiacoin-qt usr/bin
+share/pixmaps/utopiacoin32.xpm usr/share/pixmaps
+share/pixmaps/utopiacoin16.xpm usr/share/pixmaps
+share/pixmaps/utopiacoin128.png usr/share/pixmaps
+debian/utopiacoin-qt.desktop usr/share/applications
+debian/utopiacoin-qt.protocol usr/share/kde4/services/

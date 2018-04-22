@@ -1,0 +1,33 @@
+# /etc/conf.d/utopiacoind: config file for /etc/init.d/utopiacoind
+
+# Config file location
+#UTOPIACOIND_CONFIGFILE="/etc/utopiacoin/utopiacoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $UTOPIACOIND_USER)
+#UTOPIACOIND_PIDDIR="/var/run/utopiacoind"
+
+# What filename to give the pidfile
+#UTOPIACOIND_PIDFILE="${UTOPIACOIND_PIDDIR}/utopiacoind.pid"
+
+# Where to write utopiacoind data (be mindful that the blockchain is large)
+#UTOPIACOIND_DATADIR="/var/lib/utopiacoind"
+
+# User and group to own utopiacoind process
+#UTOPIACOIND_USER="utopiacoin"
+#UTOPIACOIND_GROUP="utopiacoin"
+
+# Path to utopiacoind executable
+#UTOPIACOIND_BIN="/usr/bin/utopiacoind"
+
+# Nice value to run utopiacoind under
+#UTOPIACOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#UTOPIACOIND_OPTS=""
+
+# The timeout in seconds OpenRC will wait for utopiacoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+UTOPIACOIND_SIGTERM_TIMEOUT=60

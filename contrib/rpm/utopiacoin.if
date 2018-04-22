@@ -1,0 +1,157 @@
+
+## <summary>policy for utopiacoin</summary>
+
+
+########################################
+## <summary>
+##	Transition to utopiacoin.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`utopiacoin_domtrans',`
+	gen_require(`
+		type utopiacoin_t, utopiacoin_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, utopiacoin_exec_t, utopiacoin_t)
+')
+
+
+########################################
+## <summary>
+##	Execute utopiacoin server in the utopiacoin domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`utopiacoin_initrc_domtrans',`
+	gen_require(`
+		type utopiacoin_initrc_exec_t;
+	')
+
+	init_labeled_script_domtrans($1, utopiacoin_initrc_exec_t)
+')
+
+
+########################################
+## <summary>
+##	Search utopiacoin lib directories.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`utopiacoin_search_lib',`
+	gen_require(`
+		type utopiacoin_var_lib_t;
+	')
+
+	allow $1 utopiacoin_var_lib_t:dir search_dir_perms;
+	files_search_var_lib($1)
+')
+
+########################################
+## <summary>
+##	Read utopiacoin lib files.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`utopiacoin_read_lib_files',`
+	gen_require(`
+		type utopiacoin_var_lib_t;
+	')
+
+	files_search_var_lib($1)
+	read_files_pattern($1, utopiacoin_var_lib_t, utopiacoin_var_lib_t)
+')
+
+########################################
+## <summary>
+##	Manage utopiacoin lib files.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`utopiacoin_manage_lib_files',`
+	gen_require(`
+		type utopiacoin_var_lib_t;
+	')
+
+	files_search_var_lib($1)
+	manage_files_pattern($1, utopiacoin_var_lib_t, utopiacoin_var_lib_t)
+')
+
+########################################
+## <summary>
+##	Manage utopiacoin lib directories.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`utopiacoin_manage_lib_dirs',`
+	gen_require(`
+		type utopiacoin_var_lib_t;
+	')
+
+	files_search_var_lib($1)
+	manage_dirs_pattern($1, utopiacoin_var_lib_t, utopiacoin_var_lib_t)
+')
+
+
+########################################
+## <summary>
+##	All of the rules required to administrate
+##	a utopiacoin environment
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="role">
+##	<summary>
+##	Role allowed access.
+##	</summary>
+## </param>
+## <rolecap/>
+#
+interface(`utopiacoin_admin',`
+	gen_require(`
+		type utopiacoin_t;
+		type utopiacoin_initrc_exec_t;
+		type utopiacoin_var_lib_t;
+	')
+
+	allow $1 utopiacoin_t:process { ptrace signal_perms };
+	ps_process_pattern($1, utopiacoin_t)
+
+	utopiacoin_initrc_domtrans($1)
+	domain_system_change_exemption($1)
+	role_transition $2 utopiacoin_initrc_exec_t system_r;
+	allow $2 system_r;
+
+	files_search_var_lib($1)
+	admin_pattern($1, utopiacoin_var_lib_t)
+
+')
+

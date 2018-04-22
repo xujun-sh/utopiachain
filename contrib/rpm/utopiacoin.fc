@@ -1,0 +1,8 @@
+/usr/bin/utopiacoin-cli		--	gen_context(system_u:object_r:utopiacoin_exec_t,s0)
+/usr/sbin/utopiacoind		--	gen_context(system_u:object_r:utopiacoin_exec_t,s0)
+/usr/lib(64)?/utopiacoin/utopiacoind		--	gen_context(system_u:object_r:utopiacoin_exec_t,s0)
+
+/etc/utopiacoin(/.*)?		gen_context(system_u:object_r:utopiacoin_conf_t,s0)
+/var/lib/utopiacoin(/.*)?		gen_context(system_u:object_r:utopiacoin_var_lib_t,s0)
+
+(/var)?/run/utopiacoind(/.*)?   gen_context(system_u:object_r:utopiacoin_var_run_t,s0)

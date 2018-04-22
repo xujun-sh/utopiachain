@@ -1,0 +1,11 @@
+[Protocol]
+exec=utopiacoin-qt '%u'
+protocol=utopiacoin
+input=none
+output=none
+helper=true
+listing=
+reading=false
+writing=false
+makedir=false
+deleting=false

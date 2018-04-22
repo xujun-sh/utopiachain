@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Name=Utopiacoin Core
+Comment=Connect to the Utopiacoin P2P Network
+Comment[de]=Verbinde mit dem Utopiacoin peer-to-peer Netzwerk
+Comment[fr]=Utopiacoin, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Utopiacoin, eşten eşe kriptografik sanal para birimi
+Exec=utopiacoin-qt %u
+Terminal=false
+Type=Application
+Icon=utopiacoin128
+MimeType=x-scheme-handler/utopiacoin;
+Categories=Office;Finance;
+StartupWMClass=Utopiacoin-qt

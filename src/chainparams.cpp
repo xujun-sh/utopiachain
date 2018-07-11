@@ -52,7 +52,8 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     //const char* pszTimestamp = "EverMarket: Trading for Whatever, with Whoever, from Wherever, at Whenever, by However, & no Feels! 04/09/2018";       //--//
     //const CScript genesisOutputScript = CScript() << ParseHex("042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d") << OP_CHECKSIG; //--//
 
-    const char* pszTimestamp = "EverMarket: Trading for Whatever, with Whoever no Feels! 04/09/2018";
+    //const char* pszTimestamp = "EverMarket: Trading for Whatever, with Whoever no Fee! 20180708";
+    const char* pszTimestamp = "To trade:whatever,whoever,wherever,whenever,however,no fee! 2018/7/8";
     const CScript genesisOutputScript = CScript() << ParseHex("042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d") << OP_CHECKSIG;
 
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
@@ -118,10 +119,16 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0x2a;   //--//
+        pchMessageStart[0] = 0xa2;   //--//
+        pchMessageStart[1] = 0xb4;   //--//
+        pchMessageStart[2] = 0xc6;   //--//
+        pchMessageStart[3] = 0xd8;   //--//
+	/*	
+	pchMessageStart[0] = 0x2a;   //--//
         pchMessageStart[1] = 0x4b;   //--//
         pchMessageStart[2] = 0x6c;   //--//
         pchMessageStart[3] = 0x8d;   //--//
+	*/
         nDefaultPort = 9567;  //--//   
         nPruneAfterHeight = 100000; 
 /*
@@ -135,39 +142,40 @@ PubkeyScript: 41042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0de
 Merkle Hash: 364ecc1861373c3c2c67dd65ec8e795b6435b19761e95c170f2332a8744bd176
 Byteswapped: 76d14b74a832230f175ce96197b135645b798eec65dd672c3c3c376118cc4e36
 Generating block...
-321306 Hashes/s, Nonce 6530222511
+321111 Hashes/s, Nonce 30117587647
 Block found!
-Hash: 000000003178d59a5ce7ed4fb5c55d0d8dd19b88bf3de6e6d43392a6bab5451e
-Nonce: 653291704
-Unix time: 1526123574
+Hash: 00000000d9540efed6c7b96b6d68952d331f968d8dcfbdff84ccd10393f0aeaf
+Nonce: 3012042094
+Unix time: 1531049810
 
-./generator 042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "EverMarket: Trading for Whatever, with Whoever no Feels! 04/09/2018" 486604799
+./generator 01daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "To trade:whatever,whoever,wherever,whenever,however,no fee! 2018/7/8" 486604799
 
-Coinbase: 04ffff001d010443457665724d61726b65743a2054726164696e6720666f722057686174657665722c20776974682057686f65766572206e6f204665656c73212030342f30392f32303138
+Coinbase: 04ffff001d010444546f2074726164653a77686174657665722c77686f657665722c77686572657665722c7768656e657665722c686f77657665722c6e6f206665652120323031382f372f38
 
 PubkeyScript: 41042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435dac
 
-Merkle Hash: 364ecc1861373c3c2c67dd65ec8e795b6435b19761e95c170f2332a8744bd176
-Byteswapped: 76d14b74a832230f175ce96197b135645b798eec65dd672c3c3c376118cc4e36
+Merkle Hash: b88540453187252090bedbf2849106c0713791ac32962c71372817bfbc02bcf1
+Byteswapped: f1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8
 Generating block...
-320678 Hashes/s, Nonce 41525267549
+318656 Hashes/s, Nonce 26971693243
 Block found!
-Hash: 000000009830e1e6576c42158df91b489c276c6312a241c611db445c9cd5141d
-Nonce: 4152597764
-Unix time: 1526006322
+Hash: 00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5
+Nonce: 27080064
+Unix time: 1531348935
+
 */
 
-        //genesis = CreateGenesisBlock(1523482340, 1361669092, 0x207fffff, 1, 21000000 * COIN);      //--// all 21,000,000 coins
+        //genesis = CreateGenesisBlock(1531049810, 3012042094, 0x207fffff, 1, 21000000 * COIN);      //--// all 21,000,000 coins
         ////genesis = CreateGenesisBlock(1523410697, 285676872, 0x1d00ffff, 1, 21000000 * COIN);
         //consensus.hashGenesisBlock = genesis.GetHash();
         //assert(consensus.hashGenesisBlock == uint256S("0x000000009754350b26c9d74e622f0dbb7c4de794325776dd1b8bada3f77f38de"));     //--// need to put in new hash of genesis block
         //assert(genesis.hashMerkleRoot == uint256S("0x3ca2c4d58adba82b577d0b0a25a4a3440c58dd358f7d0db00f93ef3af5d30114"));         //--// need to put in new hash of genesis block merkle root
 
 	//genesis = CreateGenesisBlock(1523652107, 2761769460, 0x207fffff, 1, 21000000 * COIN);
-	genesis = CreateGenesisBlock(1526123574, 653291704, 0x1d00ffff, 1, 21000000 * COIN);
+	genesis = CreateGenesisBlock(1531348935, 27080064, 0x1d00ffff, 1, 21000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000000003178d59a5ce7ed4fb5c55d0d8dd19b88bf3de6e6d43392a6bab5451e"));     //--// need to put in new hash of genesis block
-        assert(genesis.hashMerkleRoot == uint256S("0x76d14b74a832230f175ce96197b135645b798eec65dd672c3c3c376118cc4e36"));         //--// need to put in new hash of genesis block merkle root
+        assert(consensus.hashGenesisBlock == uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5"));     //--// need to put in new hash of genesis block
+        assert(genesis.hashMerkleRoot == uint256S("0xf1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8"));         //--// need to put in new hash of genesis block merkle root
 
 
         vFixedSeeds.clear();           //--// doesn't have any fixed seeds
@@ -186,7 +194,8 @@ Unix time: 1526006322
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
-        bech32_hrp = "em";      //--//
+        //bech32_hrp = "em";      //--//
+	bech32_hrp = "uc";
 
         //--// vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -196,7 +205,7 @@ Unix time: 1526006322
 
         checkpointData = {
             {
-                { 0, uint256S("0x000000003178d59a5ce7ed4fb5c55d0d8dd19b88bf3de6e6d43392a6bab5451e")},    //--//
+                { 0, uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5")},    //--//
     //--//            { 33333, uint256S("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")},
     //--//            { 74000, uint256S("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")},
     //--//            {105000, uint256S("0x00000000000291ce28027faea320c8d2b054b2e0fe44a773f3eefb151d6bdc97")},
@@ -214,7 +223,7 @@ Unix time: 1526006322
 
         chainTxData = ChainTxData{
             // Data as of block 000000000000000000d97e53664d17967bd4ee50b23abb92e54a34eb222d15ae (height 478913).
-            1526123574,        //--// * UNIX timestamp for genesis block (need to put)
+            1531348935,        //--// * UNIX timestamp for genesis block (need to put)
             0,        //--// * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             0        //--// * estimated number of transactions per second after that timestamp
@@ -261,19 +270,26 @@ public:
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");  //--//
-
+	/*
         pchMessageStart[0] = 0x1a;                    //--//
         pchMessageStart[1] = 0x3b;                    //--//
         pchMessageStart[2] = 0x5c;                    //--//
         pchMessageStart[3] = 0x7d;                    //--//
-        nDefaultPort = 19567;                         //--//
+	*/
+	pchMessageStart[0] = 0x2a;                 //  test net
+        pchMessageStart[1] = 0x4b;                //  test net
+        pchMessageStart[2] = 0x6c;                //  test net
+        pchMessageStart[3] = 0x8d;                //  test net
+        
+	nDefaultPort = 19567;                         //--//
         nPruneAfterHeight = 1000;
 
         //genesis = CreateGenesisBlock(1523664586, 3256264841, 0x207fffff, 1, 50 * COIN);  //--// need to change to new time
-        genesis = CreateGenesisBlock(1523712589, 305168588, 0x1d00ffff, 1, 50 * COIN);
+	genesis = CreateGenesisBlock(1531348935, 27080064, 0x1d00ffff, 1, 21000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000000061bd9ad0da4205a2b0f066426335733dede3cc86da5044e4ab48b9fe"));     //--// need to put in new hash of genesis block
-        assert(genesis.hashMerkleRoot == uint256S("0xaa2b9f50bb359ee23a63304a247567ce2986b7ccdea2e61234112001a936c71f"));         //--// need to put in new hash of genesis block merkle root
+        assert(consensus.hashGenesisBlock == uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5"));     //--// need to put in new hash of genesis block
+        assert(genesis.hashMerkleRoot == uint256S("0xf1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8"));         //--// need to put in new hash of genesis block merkle root
+
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -289,7 +305,8 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "emt";              //--//
+        //bech32_hrp = "emt";              //--//
+	bech32_hrp = "tu";
 
         //--// vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 
@@ -300,13 +317,13 @@ public:
 
         checkpointData = {
             {
-              	{ 0, uint256S("0x0000000061bd9ad0da4205a2b0f066426335733dede3cc86da5044e4ab48b9fe")},    //--//
+              	{ 0, uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5")},    //--//
             }
         };
 
         chainTxData = ChainTxData{
             // Data as of block 00000000000001c200b9790dc637d3bb141fe77d155b966ed775b17e109f7c6c (height 1156179)
-            1523712589,       //--// 
+            1531348935,       //--// 
             0,       //--// 
             0     //--// 
         };
@@ -349,12 +366,18 @@ public:
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00");
-
+	/*
         pchMessageStart[0] = 0x2a;                //--//
         pchMessageStart[1] = 0x3b;                //--//
         pchMessageStart[2] = 0x4c;                //--//
         pchMessageStart[3] = 0x5d;                //--//
-        nDefaultPort = 19678;                     //--//              
+        */
+	pchMessageStart[0] = 0xab;               //  regtest net
+        pchMessageStart[1] = 0xbc;               //  regtest net
+        pchMessageStart[2] = 0xcd;               //  regtest net
+        pchMessageStart[3] = 0xde;               //  regtest net
+
+	nDefaultPort = 19678;                     //--//              
         nPruneAfterHeight = 1000;
 
         //genesis = CreateGenesisBlock(1496688602, 2, 0x207fffff, 1, 50 * COIN);                 //--// need to put in new time
@@ -362,26 +385,30 @@ public:
         //assert(consensus.hashGenesisBlock == uint256S("0x"));                  //--//  need to put in new hash
         //assert(genesis.hashMerkleRoot == uint256S("0x"));                      //--//  need to put in new hash
 /*
-./generator 01daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "EverMarket: Trading for Whatever, with Whoever no Feels! 04/09/2018" 486604799
+./generator 042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "To trade: whatever, whoever, wherever, whenever, however, without any fee! 2018/7/8." 486604799
 
-Coinbase: 04ffff001d010443457665724d61726b65743a2054726164696e6720666f722057686174657665722c20776974682057686f65766572206e6f204665656c73212030342f30392f32303138
+Coinbase: 04ffff001d010454546f2074726164653a2077686174657665722c2077686f657665722c2077686572657665722c207768656e657665722c20686f77657665722c20776974686f757420616e79206665652120323031382f372f382e
 
 PubkeyScript: 41042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435dac
 
-Merkle Hash: 1fc736a90120113412e6a2deccb78629ce6775244a30633ae29e35bb509f2baa
-Byteswapped: aa2b9f50bb359ee23a63304a247567ce2986b7ccdea2e61234112001a936c71f
+Merkle Hash: 7760b3302bc923d33d2b11d0096142625f56842874206ef052edbdc1dc6c6b37
+Byteswapped: 376b6cdcc1bded52f06e20742884565f62426109d0112b3dd323c92b30b36077
 Generating block...
-318694 Hashes/s, Nonce 30513156945
+286456 Hashes/s, Nonce 25586751563
 Block found!
-Hash: 0000000061bd9ad0da4205a2b0f066426335733dede3cc86da5044e4ab48b9fe
-Nonce: 305168588
-Unix time: 1523712589
+Hash: 000000000d1afaf4444d7c3af50f5b9a06e34b6e0bf5d1aecf5efd513262841e
+Nonce: 2558754250
+Unix time: 1531256859
+
 */
 	//genesis = CreateGenesisBlock(1523664586, 3256264841, 0x207fffff, 1, 50 * COIN);  //--// need to change to new time
-        genesis = CreateGenesisBlock(1523712589, 305168588, 0x1d00ffff, 1, 50 * COIN);
+        //genesis = CreateGenesisBlock(1523712589, 305168588, 0x207fffff, 1, 50 * COIN);
+	genesis = CreateGenesisBlock(1531348935, 27080064, 0x1d00ffff, 1, 21000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0000000061bd9ad0da4205a2b0f066426335733dede3cc86da5044e4ab48b9fe"));     //--// need to put in new hash of genesis block
-        assert(genesis.hashMerkleRoot == uint256S("0xaa2b9f50bb359ee23a63304a247567ce2986b7ccdea2e61234112001a936c71f"));         //--// need to put in new hash of genesis block merkle root
+        assert(consensus.hashGenesisBlock == uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5"));     //--// need to put in new hash of genesis block
+        assert(genesis.hashMerkleRoot == uint256S("0xf1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8"));         //--// need to put in new hash of genesis block merkle root
+	
+
         
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
@@ -392,12 +419,12 @@ Unix time: 1523712589
 
         checkpointData = {
             {
-                {0, uint256S("0x0000000061bd9ad0da4205a2b0f066426335733dede3cc86da5044e4ab48b9fe")},  //--//  need new hash
+                {0, uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5")},  //--//  need new hash
             }
         };
 
         chainTxData = ChainTxData{
-            1523712589,
+            1531348935,
             0,
             0
         };
@@ -408,7 +435,8 @@ Unix time: 1523712589
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "emrt";                  //--//
+        //bech32_hrp = "emrt";                  //--//
+	bech32_hrp = "ucrt"; 
     }
 };
 

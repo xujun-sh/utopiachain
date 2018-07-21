@@ -133,7 +133,7 @@ public:
         nPruneAfterHeight = 100000; 
 /*
 
-./generator 042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "EverMarket: Trading for Whatever, with Whoever no Feels! 04/09/2018" 486604799
+./generator 042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "To trade:whatever,whoever,wherever,whenever,however,no fee! 2018/7/8" 486604799
 
 Coinbase: 04ffff001d010443457665724d61726b65743a2054726164696e6720666f722057686174657665722c20776974682057686f65766572206e6f204665656c73212030342f30392f32303138
 
@@ -148,7 +148,7 @@ Hash: 00000000d9540efed6c7b96b6d68952d331f968d8dcfbdff84ccd10393f0aeaf
 Nonce: 3012042094
 Unix time: 1531049810
 
-./generator 01daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "To trade:whatever,whoever,wherever,whenever,however,no fee! 2018/7/8" 486604799
+./generator 042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "To trade:whatever,whoever,wherever,whenever,however,no fee! 2018/7/8" 486604799
 
 Coinbase: 04ffff001d010444546f2074726164653a77686174657665722c77686f657665722c77686572657665722c7768656e657665722c686f77657665722c6e6f206665652120323031382f372f38
 
@@ -157,12 +157,11 @@ PubkeyScript: 41042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0de
 Merkle Hash: b88540453187252090bedbf2849106c0713791ac32962c71372817bfbc02bcf1
 Byteswapped: f1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8
 Generating block...
-318656 Hashes/s, Nonce 26971693243
+1928152 Hashes/s, Nonce 2159967069
 Block found!
-Hash: 00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5
-Nonce: 27080064
-Unix time: 1531348935
-
+Hash: 000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794
+Nonce: 2161789762
+Unix time: 1531872954
 */
 
         //genesis = CreateGenesisBlock(1531049810, 3012042094, 0x207fffff, 1, 21000000 * COIN);      //--// all 21,000,000 coins
@@ -172,11 +171,10 @@ Unix time: 1531348935
         //assert(genesis.hashMerkleRoot == uint256S("0x3ca2c4d58adba82b577d0b0a25a4a3440c58dd358f7d0db00f93ef3af5d30114"));         //--// need to put in new hash of genesis block merkle root
 
 	//genesis = CreateGenesisBlock(1523652107, 2761769460, 0x207fffff, 1, 21000000 * COIN);
-	genesis = CreateGenesisBlock(1531348935, 27080064, 0x1d00ffff, 1, 21000000 * COIN);
+	genesis = CreateGenesisBlock(1531872954, 2161789762, 0x1d00ffff, 1, 21000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5"));     //--// need to put in new hash of genesis block
+        assert(consensus.hashGenesisBlock == uint256S("0x000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794"));     //--// need to put in new hash of genesis block
         assert(genesis.hashMerkleRoot == uint256S("0xf1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8"));         //--// need to put in new hash of genesis block merkle root
-
 
         vFixedSeeds.clear();           //--// doesn't have any fixed seeds
         vSeeds.clear();                //--// doesn't have any DNS seeds
@@ -205,7 +203,7 @@ Unix time: 1531348935
 
         checkpointData = {
             {
-                { 0, uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5")},    //--//
+                { 0, uint256S("0x000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794")},    //--//
     //--//            { 33333, uint256S("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")},
     //--//            { 74000, uint256S("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")},
     //--//            {105000, uint256S("0x00000000000291ce28027faea320c8d2b054b2e0fe44a773f3eefb151d6bdc97")},
@@ -223,7 +221,7 @@ Unix time: 1531348935
 
         chainTxData = ChainTxData{
             // Data as of block 000000000000000000d97e53664d17967bd4ee50b23abb92e54a34eb222d15ae (height 478913).
-            1531348935,        //--// * UNIX timestamp for genesis block (need to put)
+            1531872954,        //--// * UNIX timestamp for genesis block (need to put)
             0,        //--// * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             0        //--// * estimated number of transactions per second after that timestamp
@@ -285,9 +283,9 @@ public:
         nPruneAfterHeight = 1000;
 
         //genesis = CreateGenesisBlock(1523664586, 3256264841, 0x207fffff, 1, 50 * COIN);  //--// need to change to new time
-	genesis = CreateGenesisBlock(1531348935, 27080064, 0x1d00ffff, 1, 21000000 * COIN);
+	genesis = CreateGenesisBlock(1531872954, 2161789762, 0x1d00ffff, 1, 21000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5"));     //--// need to put in new hash of genesis block
+        assert(consensus.hashGenesisBlock == uint256S("0x000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794"));     //--// need to put in new hash of genesis block
         assert(genesis.hashMerkleRoot == uint256S("0xf1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8"));         //--// need to put in new hash of genesis block merkle root
 
 
@@ -317,13 +315,13 @@ public:
 
         checkpointData = {
             {
-              	{ 0, uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5")},    //--//
+              	{ 0, uint256S("0x000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794")},    //--//
             }
         };
 
         chainTxData = ChainTxData{
             // Data as of block 00000000000001c200b9790dc637d3bb141fe77d155b966ed775b17e109f7c6c (height 1156179)
-            1531348935,       //--// 
+            1531872954,       //--// 
             0,       //--// 
             0     //--// 
         };
@@ -385,7 +383,7 @@ public:
         //assert(consensus.hashGenesisBlock == uint256S("0x"));                  //--//  need to put in new hash
         //assert(genesis.hashMerkleRoot == uint256S("0x"));                      //--//  need to put in new hash
 /*
-./generator 042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "To trade: whatever, whoever, wherever, whenever, however, without any fee! 2018/7/8." 486604799
+./generator 042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0decaf6bfedb4f25e454328f67f6a5823f3f7c7efda274a276a37189139957402435d "To trade: whatever, whoever, wherever, whenever, however, no fee! 2018/7/8." 486604799
 
 Coinbase: 04ffff001d010454546f2074726164653a2077686174657665722c2077686f657665722c2077686572657665722c207768656e657665722c20686f77657665722c20776974686f757420616e79206665652120323031382f372f382e
 
@@ -403,9 +401,9 @@ Unix time: 1531256859
 */
 	//genesis = CreateGenesisBlock(1523664586, 3256264841, 0x207fffff, 1, 50 * COIN);  //--// need to change to new time
         //genesis = CreateGenesisBlock(1523712589, 305168588, 0x207fffff, 1, 50 * COIN);
-	genesis = CreateGenesisBlock(1531348935, 27080064, 0x1d00ffff, 1, 21000000 * COIN);
+	genesis = CreateGenesisBlock(1531872954, 2161789762, 0x1d00ffff, 1, 21000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5"));     //--// need to put in new hash of genesis block
+        assert(consensus.hashGenesisBlock == uint256S("0x000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794"));     //--// need to put in new hash of genesis block
         assert(genesis.hashMerkleRoot == uint256S("0xf1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8"));         //--// need to put in new hash of genesis block merkle root
 	
 
@@ -419,12 +417,12 @@ Unix time: 1531256859
 
         checkpointData = {
             {
-                {0, uint256S("0x00000000191ea92be652b486d5383cf680691128489cbede203e802ee9925ac5")},  //--//  need new hash
+                {0, uint256S("0x000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794")},  //--//  need new hash
             }
         };
 
         chainTxData = ChainTxData{
-            1531348935,
+            1531872954,
             0,
             0
         };

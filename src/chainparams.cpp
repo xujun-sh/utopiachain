@@ -171,7 +171,7 @@ Unix time: 1537013470
         //assert(genesis.hashMerkleRoot == uint256S("0x3ca2c4d58adba82b577d0b0a25a4a3440c58dd358f7d0db00f93ef3af5d30114"));         //--// need to put in new hash of genesis block merkle root
 
 	//genesis = CreateGenesisBlock(1523652107, 2761769460, 0x207fffff, 1, 21000000 * COIN);
-	genesis = CreateGenesisBlock(1537013470, 2161789762, 0x1d00ffff, 1, 21000000 * COIN);
+	genesis = CreateGenesisBlock(1537013470, 656505664, 0x1d00ffff, 1, 21000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x00000000d6a60a86bcea7bfa28012c368e7c19489beb9b3feba28903ae1c7f0d"));     //--// need to put in new hash of genesis block
         assert(genesis.hashMerkleRoot == uint256S("0xf1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8"));         //--// need to put in new hash of genesis block merkle root

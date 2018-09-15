@@ -157,11 +157,11 @@ PubkeyScript: 41042db5eccd3100e0373bf51daaa0857eb1410bd8772c8c8513599f15c3f5a0de
 Merkle Hash: b88540453187252090bedbf2849106c0713791ac32962c71372817bfbc02bcf1
 Byteswapped: f1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8
 Generating block...
-1928152 Hashes/s, Nonce 2159967069
+1933337 Hashes/s, Nonce 654964924
 Block found!
-Hash: 000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794
-Nonce: 2161789762
-Unix time: 1531872954
+Hash: 00000000d6a60a86bcea7bfa28012c368e7c19489beb9b3feba28903ae1c7f0d
+Nonce: 656505664
+Unix time: 1537013470
 */
 
         //genesis = CreateGenesisBlock(1531049810, 3012042094, 0x207fffff, 1, 21000000 * COIN);      //--// all 21,000,000 coins
@@ -171,9 +171,9 @@ Unix time: 1531872954
         //assert(genesis.hashMerkleRoot == uint256S("0x3ca2c4d58adba82b577d0b0a25a4a3440c58dd358f7d0db00f93ef3af5d30114"));         //--// need to put in new hash of genesis block merkle root
 
 	//genesis = CreateGenesisBlock(1523652107, 2761769460, 0x207fffff, 1, 21000000 * COIN);
-	genesis = CreateGenesisBlock(1531872954, 2161789762, 0x1d00ffff, 1, 21000000 * COIN);
+	genesis = CreateGenesisBlock(1537013470, 2161789762, 0x1d00ffff, 1, 21000000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794"));     //--// need to put in new hash of genesis block
+        assert(consensus.hashGenesisBlock == uint256S("0x00000000d6a60a86bcea7bfa28012c368e7c19489beb9b3feba28903ae1c7f0d"));     //--// need to put in new hash of genesis block
         assert(genesis.hashMerkleRoot == uint256S("0xf1bc02bcbf172837712c9632ac913771c0069184f2dbbe9020258731454085b8"));         //--// need to put in new hash of genesis block merkle root
 
         vFixedSeeds.clear();           //--// doesn't have any fixed seeds
@@ -203,7 +203,7 @@ Unix time: 1531872954
 
         checkpointData = {
             {
-                { 0, uint256S("0x000000000c7faa56e2045ea6c7effcd6df83769fe151561350c9a9238ebac794")},    //--//
+                { 0, uint256S("0x00000000d6a60a86bcea7bfa28012c368e7c19489beb9b3feba28903ae1c7f0d")},    //--//
     //--//            { 33333, uint256S("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")},
     //--//            { 74000, uint256S("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")},
     //--//            {105000, uint256S("0x00000000000291ce28027faea320c8d2b054b2e0fe44a773f3eefb151d6bdc97")},
@@ -221,7 +221,7 @@ Unix time: 1531872954
 
         chainTxData = ChainTxData{
             // Data as of block 000000000000000000d97e53664d17967bd4ee50b23abb92e54a34eb222d15ae (height 478913).
-            1531872954,        //--// * UNIX timestamp for genesis block (need to put)
+            1537013470,        //--// * UNIX timestamp for genesis block (need to put)
             0,        //--// * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             0        //--// * estimated number of transactions per second after that timestamp

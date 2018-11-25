@@ -1,64 +1,5 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#include <qt/utopiacoingui.h>
-
-#include <qt/utopiacoinunits.h>
-#include <qt/clientmodel.h>
-#include <qt/guiconstants.h>
-#include <qt/guiutil.h>
-#include <qt/modaloverlay.h>
-#include <qt/networkstyle.h>
-#include <qt/notificator.h>
-#include <qt/openuridialog.h>
-#include <qt/optionsdialog.h>
-#include <qt/optionsmodel.h>
-#include <qt/platformstyle.h>
-#include <qt/rpcconsole.h>
-#include <qt/utilitydialog.h>
-
-#ifdef ENABLE_WALLET
-#include <qt/walletframe.h>
-#include <qt/walletmodel.h>
-#endif // ENABLE_WALLET
-
-#ifdef Q_OS_MAC
-#include <qt/macdockiconhandler.h>
-#endif
-
-#include <chainparams.h>
-#include <init.h>
-#include <ui_interface.h>
-#include <util.h>
-
-#include <iostream>
-
-#include <QAction>
-#include <QApplication>
-#include <QDateTime>
-#include <QDesktopWidget>
-#include <QDragEnterEvent>
-#include <QListWidget>
-#include <QMenuBar>
-#include <QMessageBox>
-#include <QMimeData>
-#include <QProgressDialog>
-#include <QSettings>
-#include <QShortcut>
-#include <QStackedWidget>
-#include <QStatusBar>
-#include <QStyle>
-#include <QTimer>
-#include <QToolBar>
-#include <QVBoxLayout>
-
-#if QT_VERSION < 0x050000
-#include <QTextDocument>
-#include <QUrl>
-#else
-#include <QUrlQuery>
-#endif
+#include "qt/utopiacoingui.h"
+#include "qt/ui_utopiacoingui.h"
 
 const std::string UtopiacoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
@@ -74,1197 +15,458 @@ const std::string UtopiacoinGUI::DEFAULT_UIPLATFORM =
  * collisions in the future with additional wallets */
 const QString UtopiacoinGUI::DEFAULT_WALLET = "~Default";
 
-UtopiacoinGUI::UtopiacoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
+
+UtopiacoinGUI::UtopiacoinGUI(QWidget *parent) :
     QMainWindow(parent),
-    enableWallet(false),
-    clientModel(0),
-    walletFrame(0),
-    unitDisplayControl(0),
-    labelWalletEncryptionIcon(0),
-    labelWalletHDStatusIcon(0),
-    connectionsControl(0),
-    labelBlocksIcon(0),
-    progressBarLabel(0),
-    progressBar(0),
-    progressDialog(0),
-    appMenuBar(0),
-    overviewAction(0),
-    historyAction(0),
-    quitAction(0),
-    sendCoinsAction(0),
-    sendCoinsMenuAction(0),
-    usedSendingAddressesAction(0),
-    usedReceivingAddressesAction(0),
-    signMessageAction(0),
-    verifyMessageAction(0),
-    aboutAction(0),
-    receiveCoinsAction(0),
-    receiveCoinsMenuAction(0),
-    optionsAction(0),
-    toggleHideAction(0),
-    encryptWalletAction(0),
-    backupWalletAction(0),
-    changePassphraseAction(0),
-    aboutQtAction(0),
-    openRPCConsoleAction(0),
-    openAction(0),
-    showHelpMessageAction(0),
-    trayIcon(0),
-    trayIconMenu(0),
-    notificator(0),
-    rpcConsole(0),
-    helpMessageDialog(0),
-    modalOverlay(0),
-    prevBlocks(0),
-    spinnerFrame(0),
-    platformStyle(_platformStyle)
+    ui(new Ui::UtopiacoinGUI)
 {
-    QSettings settings;
-    if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {
-        // Restore failed (perhaps missing setting), center the window
-        move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
-    }
+    ui->setupUi(this);
 
-    QString windowTitle = tr(PACKAGE_NAME) + " - ";
-#ifdef ENABLE_WALLET
-    enableWallet = WalletModel::isWalletEnabled();
-#endif // ENABLE_WALLET
-    if(enableWallet)
-    {
-        windowTitle += tr("Wallet");
-    } else {
-        windowTitle += tr("Node");
-    }
-    windowTitle += " " + networkStyle->getTitleAddText();
-#ifndef Q_OS_MAC
-    QApplication::setWindowIcon(networkStyle->getTrayAndWindowIcon());
-    setWindowIcon(networkStyle->getTrayAndWindowIcon());
-#else
-    MacDockIconHandler::instance()->setIcon(networkStyle->getAppIcon());
-#endif
-    setWindowTitle(windowTitle);
 
-#if defined(Q_OS_MAC) && QT_VERSION < 0x050000
-    // This property is not implemented in Qt 5. Setting it has no effect.
-    // A replacement API (QtMacUnifiedToolBar) is available in QtMacExtras.
-    setUnifiedTitleAndToolBarOnMac(true);
-#endif
+    /////////////////////////////////////General setting///////////////////////////////////////
+        ui->tabWidget->setCurrentIndex(0);                                                     // always open the Browser page first.
 
-    rpcConsole = new RPCConsole(_platformStyle, 0);
-    helpMessageDialog = new HelpMessageDialog(this, false);
-#ifdef ENABLE_WALLET
-    if(enableWallet)
-    {
-        /** Create wallet frame and make it the central widget */
-        walletFrame = new WalletFrame(_platformStyle, this);
-        setCentralWidget(walletFrame);
-    } else
-#endif // ENABLE_WALLET
-    {
-        /* When compiled without wallet or -disablewallet is provided,
-         * the central widget is the rpc console.
-         */
-        setCentralWidget(rpcConsole);
-    }
+                  //////Validator for number, string////////
+        QDoubleValidator *pDoubleValidator = new QDoubleValidator(this);
+            pDoubleValidator->setRange(0, 1000000000);                                         // set double number
+            pDoubleValidator->setNotation(QDoubleValidator::StandardNotation);
+            pDoubleValidator->setDecimals(8);
+        ui->lineEdit_amount->setValidator(pDoubleValidator);                                   // Browser                   set double
+        ui->lineEdit_inamount->setValidator(pDoubleValidator);                                 // Exchange - exchanging     set double
+        ui->lineEdit_outamount->setValidator(pDoubleValidator);                                // Exchange - exchanging     set double
+        ui->lineEdit_withUMpTamount->setValidator(pDoubleValidator);                           // Exchange - listing        set double
 
-    // Accept D&D of URIs
-    setAcceptDrops(true);
+        ui->lineEdit_totalamount->setValidator(new QIntValidator(1, 2100000000));              // Exchange - listing        set integer
+        ui->lineEdit_outtimelimit->setValidator(new QIntValidator(1, 1440));                   // Exchange - exchanging     set integer
 
-    // Create actions for the toolbar, menu bar and tray/dock icon
-    // Needs walletFrame to be initialized
-    createActions();
+        QRegExp addrreg("^[1][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$");  // prefix with 1, set base58
+        ui->lineEdit_inaddress->setValidator(new QRegExpValidator(addrreg, this));              // Exchange - exchanging
+        ui->lineEdit_owneraddress->setValidator(new QRegExpValidator(addrreg, this));           // Exchange - listing
 
-    // Create application menu bar
-    createMenuBar();
+        QRegExp assetsymbolreg("^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$");     // set base58
+        ui->lineEdit_assetsymbol->setValidator(new QRegExpValidator(assetsymbolreg, this));     // Exchange - listing       set base58
 
-    // Create the toolbars
-    createToolBars();
+                  ////////////treewidget///////////
+        ui->treeWidget->header()->setSortIndicator(0,Qt::AscendingOrder);                       // sort the asset from 0 up
 
-    // Create system tray icon and notification
-    createTrayIcon(networkStyle);
+    ///////////////////////////////////Browser/////////////////////////////////////////////////
+         // Here use RPC get and post on result window of the default result: All asset, Opening, Sell & Buy, All amount
 
-    // Create status bar
-    statusBar();
+    ////////////////////Accounting & all comboBox of asset symbol//////////////////////////////
+        ui->tableWidget_accountwindow->setEditTriggers(QAbstractItemView::NoEditTriggers);       // set edit not allowed
+        ui->tableWidget_accountwindow->resizeColumnsToContents();                                // set the horizental size to fit contents
+        ui->tableWidget_accountwindow->horizontalHeader()->setDefaultSectionSize(190);           // set every column width
+        ui->tableWidget_accountwindow->verticalHeader()->setDefaultSectionSize(25);
 
-    // Disable size grip because it looks ugly and nobody needs it
-    statusBar()->setSizeGripEnabled(false);
+        for (int i=0; i< ui->treeWidget->topLevelItemCount(); ++i){
+             QTableWidgetItem *itemSymbol, *itemAvailable, *itemPending, *itemTotal;
 
-    // Status bar notification icons
-    QFrame *frameBlocks = new QFrame();
-    frameBlocks->setContentsMargins(0,0,0,0);
-    frameBlocks->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    QHBoxLayout *frameBlocksLayout = new QHBoxLayout(frameBlocks);
-    frameBlocksLayout->setContentsMargins(3,0,3,0);
-    frameBlocksLayout->setSpacing(3);
-    unitDisplayControl = new UnitDisplayStatusBarControl(platformStyle);
-    labelWalletEncryptionIcon = new QLabel();
-    labelWalletHDStatusIcon = new QLabel();
-    connectionsControl = new GUIUtil::ClickableLabel();
-    labelBlocksIcon = new GUIUtil::ClickableLabel();
-    if(enableWallet)
-    {
-        frameBlocksLayout->addStretch();
-        frameBlocksLayout->addWidget(unitDisplayControl);
-        frameBlocksLayout->addStretch();
-        frameBlocksLayout->addWidget(labelWalletEncryptionIcon);
-        frameBlocksLayout->addWidget(labelWalletHDStatusIcon);
-    }
-    frameBlocksLayout->addStretch();
-    frameBlocksLayout->addWidget(connectionsControl);
-    frameBlocksLayout->addStretch();
-    frameBlocksLayout->addWidget(labelBlocksIcon);
-    frameBlocksLayout->addStretch();
+             // get Asset Symbol from Asset List Tree.  Done
+             itemSymbol = new QTableWidgetItem;
+             QString itemSymboltxt= ui->treeWidget->topLevelItem(i)->text(1);                    // toplevel i's col 1
+             itemSymbol->setText(itemSymboltxt);
+             ui->tableWidget_accountwindow->setItem(i, 0, itemSymbol);                           // Account's Symbol col
 
-    // Progress bar and label for blocks download
-    progressBarLabel = new QLabel();
-    progressBarLabel->setVisible(false);
-    progressBar = new GUIUtil::ProgressBar();
-    progressBar->setAlignment(Qt::AlignCenter);
-    progressBar->setVisible(false);
+             ui->comboBox_asset->setItemText(i+1, itemSymboltxt);                                // Browser
+             ui->comboBox_assetsymbol->setItemText(i, itemSymboltxt);                            // Exchange - Sending
+             ui->comboBox_inassetsymbol->setItemText(i, itemSymboltxt);                          // Exchange - Exchanging - in
+             ui->comboBox_outassetsymbol->setItemText(i, itemSymboltxt);                         // Exchange - Exchanging - out
 
-    // Override style sheet for progress bar for styles that have a segmented progress bar,
-    // as they make the text unreadable (workaround for issue #1071)
-    // See https://qt-project.org/doc/qt-4.8/gallery.html
-    QString curStyle = QApplication::style()->metaObject()->className();
-    if(curStyle == "QWindowsStyle" || curStyle == "QWindowsXPStyle")
-    {
-        progressBar->setStyleSheet("QProgressBar { background-color: #e8e8e8; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); border-radius: 7px; margin: 0px; }");
-    }
+             // get available amount for each asset
+             itemAvailable = new QTableWidgetItem;
+             QString childitemSymboltxt1= "RPC";                                                 // get the value with RPC
+             itemAvailable->setText(childitemSymboltxt1);
+             ui->tableWidget_accountwindow->setItem(i, 1, itemAvailable);                        // Account's Available col
 
-    statusBar()->addWidget(progressBarLabel);
-    statusBar()->addWidget(progressBar);
-    statusBar()->addPermanentWidget(frameBlocks);
+             // get pending amount for each asset
+             itemPending = new QTableWidgetItem;
+             QString itemPendingtxt = "1234567890.12345678";                                     // get the value with RPC
+             itemPending->setText(itemPendingtxt);
+             ui->tableWidget_accountwindow->setItem(i, 2, itemPending);                          // Account's Pending col
 
-    // Install event filter to be able to catch status tip events (QEvent::StatusTip)
-    this->installEventFilter(this);
+             // get total amount for each asset
+             itemTotal = new QTableWidgetItem;
+             QString itemTotaltxt = "1234567890.12345678";                                       // get the value with RPC
+             itemTotal->setText(itemTotaltxt);
+             ui->tableWidget_accountwindow->setItem(i, 3, itemTotal);                            // Account's Total col
 
-    // Initially wallet actions should be disabled
-    setWalletActionsEnabled(false);
+        }
 
-    // Subscribe to notifications from core
-    subscribeToCoreSignals();
+    ////////////////////////////////////////Exchange////////////////////////////////////////////
 
-    connect(connectionsControl, SIGNAL(clicked(QPoint)), this, SLOT(toggleNetworkActive()));
 
-    modalOverlay = new ModalOverlay(this->centralWidget());
-#ifdef ENABLE_WALLET
-    if(enableWallet) {
-        connect(walletFrame, SIGNAL(requestedSyncWarningInfo()), this, SLOT(showModalOverlay()));
-        connect(labelBlocksIcon, SIGNAL(clicked(QPoint)), this, SLOT(showModalOverlay()));
-        connect(progressBar, SIGNAL(clicked(QPoint)), this, SLOT(showModalOverlay()));
-    }
-#endif
+
+    ////////////////////////////////////////Manager/////////////////////////////////////////////
+
 }
 
 UtopiacoinGUI::~UtopiacoinGUI()
 {
-    // Unsubscribe from notifications from core
-    unsubscribeFromCoreSignals();
-
-    QSettings settings;
-    settings.setValue("MainWindowGeometry", saveGeometry());
-    if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
-        trayIcon->hide();
-#ifdef Q_OS_MAC
-    delete appMenuBar;
-    MacDockIconHandler::cleanup();
-#endif
-
-    delete rpcConsole;
+    delete ui;
 }
 
-void UtopiacoinGUI::createActions()
+void UtopiacoinGUI::recipientitem1(int i)
 {
-    QActionGroup *tabGroup = new QActionGroup(this);
+    if (i >1 && i <11)
+        ui->tableWidget_addmorerecipient->setRowCount(ui->tableWidget_addmorerecipient->rowCount()+3);
 
-    overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
-    overviewAction->setStatusTip(tr("Show general overview of wallet"));
-    overviewAction->setToolTip(overviewAction->statusTip());
-    overviewAction->setCheckable(true);
-    overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
-    tabGroup->addAction(overviewAction);
+    QDoubleValidator *pDoubleValidator = new QDoubleValidator(this);
+        pDoubleValidator->setRange(0, 1000000000);                                         // set double number
+        pDoubleValidator->setNotation(QDoubleValidator::StandardNotation);
+        pDoubleValidator->setDecimals(8);
+    QRegExp addrreg("^[1][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$");
 
-    sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a Utopiacoin address"));
-    sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
-    sendCoinsAction->setCheckable(true);
-    sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
-    tabGroup->addAction(sendCoinsAction);
+    QLabel *newrecipientaddress = new QLabel(QString ("Recipient Address%1:").arg(i));
+    QLabel *newreceivingamount = new QLabel(QString("  Reciving Amount:"));
+    QPushButton *newchooseaddress = new QPushButton(QString("Choose Address"));
+    QLineEdit *lineEdit_newrecipientaddress = new QLineEdit();
+       lineEdit_newrecipientaddress->setClearButtonEnabled(true);
+       lineEdit_newrecipientaddress->setMaxLength(35);
+       lineEdit_newrecipientaddress->setValidator(new QRegExpValidator(addrreg, this));
+    QLineEdit *lineEdit_newreceivingamount = new QLineEdit();
+       lineEdit_newreceivingamount->setClearButtonEnabled(true);
+       lineEdit_newreceivingamount->setMaxLength(19);
+       lineEdit_newreceivingamount->setValidator(pDoubleValidator);
 
-    sendCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/send"), sendCoinsAction->text(), this);
-    sendCoinsMenuAction->setStatusTip(sendCoinsAction->statusTip());
-    sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
-    receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses"), tr("&Receive"), this);
-    receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and utopiacoin: URIs)"));
-    receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
-    receiveCoinsAction->setCheckable(true);
-    receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
-    tabGroup->addAction(receiveCoinsAction);
+    QFrame *line0 = new QFrame;
+    line0->setFrameShape(QFrame::HLine);
+    QFrame *line1 = new QFrame;
+    line1->setFrameShape(QFrame::HLine);
+    QFrame *line2 = new QFrame;
+    line2->setFrameShape(QFrame::HLine);
 
-    receiveCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/receiving_addresses"), receiveCoinsAction->text(), this);
-    receiveCoinsMenuAction->setStatusTip(receiveCoinsAction->statusTip());
-    receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
+    ui->tableWidget_addmorerecipient->setColumnWidth(0,145);
+    ui->tableWidget_addmorerecipient->setRowHeight((i-1)*3,10);
+    ui->tableWidget_addmorerecipient->setColumnWidth(1,440);
+    ui->tableWidget_addmorerecipient->setRowHeight((i-1)*3+1,22);
+    ui->tableWidget_addmorerecipient->setColumnWidth(2,145);
+    ui->tableWidget_addmorerecipient->setRowHeight((i-1)*3+2,22);
 
-    historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), tr("&Transactions"), this);
-    historyAction->setStatusTip(tr("Browse transaction history"));
-    historyAction->setToolTip(historyAction->statusTip());
-    historyAction->setCheckable(true);
-    historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
-    tabGroup->addAction(historyAction);
+    ui->tableWidget_addmorerecipient->setCellWidget((i-1)*3,0,line0);
+    ui->tableWidget_addmorerecipient->setCellWidget((i-1)*3,1,line1);
+    ui->tableWidget_addmorerecipient->setCellWidget((i-1)*3,2,line2);
 
-#ifdef ENABLE_WALLET
-    // These showNormalIfMinimized are needed because Send Coins and Receive Coins
-    // can be triggered from the tray menu, and need to show the GUI to be useful.
-    connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
-    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
-    connect(sendCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(sendCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
-    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
-    connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
-    connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
-#endif // ENABLE_WALLET
+    ui->tableWidget_addmorerecipient->setCellWidget((i-1)*3+1,0,newrecipientaddress);
+    ui->tableWidget_addmorerecipient->setCellWidget((i-1)*3+1,1,lineEdit_newrecipientaddress);
+    ui->tableWidget_addmorerecipient->setCellWidget((i-1)*3+1,2,newchooseaddress);
 
-    quitAction = new QAction(platformStyle->TextColorIcon(":/icons/quit"), tr("E&xit"), this);
-    quitAction->setStatusTip(tr("Quit application"));
-    quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
-    quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
-    aboutAction->setStatusTip(tr("Show information about %1").arg(tr(PACKAGE_NAME)));
-    aboutAction->setMenuRole(QAction::AboutRole);
-    aboutAction->setEnabled(false);
-    aboutQtAction = new QAction(platformStyle->TextColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
-    aboutQtAction->setStatusTip(tr("Show information about Qt"));
-    aboutQtAction->setMenuRole(QAction::AboutQtRole);
-    optionsAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr(PACKAGE_NAME)));
-    optionsAction->setMenuRole(QAction::PreferencesRole);
-    optionsAction->setEnabled(false);
-    toggleHideAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
-    toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
+    ui->tableWidget_addmorerecipient->setCellWidget((i-1)*3+2,0,newreceivingamount);
+    ui->tableWidget_addmorerecipient->setCellWidget((i-1)*3+2,1,lineEdit_newreceivingamount);
+}
 
-    encryptWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
-    encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your wallet"));
-    encryptWalletAction->setCheckable(true);
-    backupWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/filesave"), tr("&Backup Wallet..."), this);
-    backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
-    changePassphraseAction = new QAction(platformStyle->TextColorIcon(":/icons/key"), tr("&Change Passphrase..."), this);
-    changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
-    signMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/edit"), tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Utopiacoin addresses to prove you own them"));
-    verifyMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/verify"), tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Utopiacoin addresses"));
+///////////////////// Browser page //////////////////////////////////////////////////////////
 
-    openRPCConsoleAction = new QAction(platformStyle->TextColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
-    openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
-    // initially disable the debug window menu item
-    openRPCConsoleAction->setEnabled(false);
+void UtopiacoinGUI::on_pushButton_cleanallsetting_clicked()
+{    // clean all setting
+     ui->comboBox_asset->setCurrentIndex(0);
+     ui->comboBox_time->setCurrentIndex(0);
+     ui->comboBox_type->setCurrentIndex(0);
+     ui->lineEdit_amount->clear();
+     ui->lineEdit_search->clear();
+     ui->textEdit_resultwindow->clear();
+     ui->textEdit_searchsettingsummary->clear();
+}
 
-    usedSendingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book"), tr("&Sending addresses..."), this);
-    usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
-    usedReceivingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book"), tr("&Receiving addresses..."), this);
-    usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
-
-    openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
-    openAction->setStatusTip(tr("Open a utopiacoin: URI or payment request"));
-
-    showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
-    showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Utopiacoin command-line options").arg(tr(PACKAGE_NAME)));
-
-    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
-    connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
-    connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-    connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
-    connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
-    connect(showHelpMessageAction, SIGNAL(triggered()), this, SLOT(showHelpMessageClicked()));
-    connect(openRPCConsoleAction, SIGNAL(triggered()), this, SLOT(showDebugWindow()));
-    // prevents an open debug window from becoming stuck/unusable on client shutdown
-    connect(quitAction, SIGNAL(triggered()), rpcConsole, SLOT(hide()));
-
-#ifdef ENABLE_WALLET
-    if(walletFrame)
-    {
-        connect(encryptWalletAction, SIGNAL(triggered(bool)), walletFrame, SLOT(encryptWallet(bool)));
-        connect(backupWalletAction, SIGNAL(triggered()), walletFrame, SLOT(backupWallet()));
-        connect(changePassphraseAction, SIGNAL(triggered()), walletFrame, SLOT(changePassphrase()));
-        connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
-        connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
-        connect(usedSendingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(usedSendingAddresses()));
-        connect(usedReceivingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(usedReceivingAddresses()));
-        connect(openAction, SIGNAL(triggered()), this, SLOT(openClicked()));
+QString searchsettingsummary = "";
+void UtopiacoinGUI::on_pushButton_reviewsearchsetting_clicked()
+{
+    QString bassetsymbol = ui->comboBox_asset->currentText();
+    QString btime =        ui->comboBox_time->currentText();
+    QString btype =        ui->comboBox_type->currentText();
+    QString bamount =      ui->lineEdit_amount->text();
+    QString bsearch =      ui->lineEdit_search->text();
+    if (bsearch != ""){   // txid and block hash are both 32 bytes 64 characters     // address is 26-35 alphanumeric characters
+        if (bsearch.length() == 64){
+            // search as block hash first if the hash not prefix with 00, then search as txid
+            // rpc: getblock bsearch 1;                   // json block
+            // rpc: gettransaction bsearch;               // tx in wallet
+            // rpc: getrawtransaction(bsearch 1);         // tx in blockchain
+            searchsettingsummary += QString("Search for the block/transaction info with:\n block hash / transaction ID (%1).").arg(bsearch); }
+        else if (bsearch.length() < 26){
+            // search as block height
+            // rpc:    getblock(getblockhash(bsearch) 1);  //json
+                searchsettingsummary += QString("Search for the block info with:\n block height (%1).").arg(bsearch); }
+             else if (bsearch.length() <36){
+                  // search as address            // rpc: getreceivedbyaccount bsearch 6;  // after 6 confirm
+                     searchsettingsummary += QString("Search for the address info with:\n address (%1).").arg(bsearch); }
+                  else{ searchsettingsummary += QString("Wrong!\n input must be block height, or block hash, or txid, or address."); }
     }
-#endif // ENABLE_WALLET
-
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this, SLOT(showDebugWindowActivateConsole()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_D), this, SLOT(showDebugWindow()));
+    else if (btime  == "Opening" && (btype == "For Buy" || btype == "For Sell" || btype == "Buy & Sell")) {
+        if (bamount == ""){ bamount = "all amount"; }
+            searchsettingsummary += QString("Search all opening (%1) transaction info with:\n asset symbol (%2), asset amount no more than (%3).")
+                                            .arg(btype).arg(bassetsymbol).arg(bamount);                                         }
+         else if (btime != "Opening" && (btype != "For Buy" && btype != "For Sell" && btype != "Buy & Sell" && bamount == ""))
+                 {// PRC: listtransactions (bassetsymbol)    // PRC: listsinceblock (getblockhash(block height))      // if btime != Opening, calculate btime to block height
+                 // if btype != Total, filter with btype
+                 searchsettingsummary += QString("Search for all transaction info with:\n asset symbol (%1), time limited to (%2), transaction type is (%3)")
+                                                 .arg(bassetsymbol).arg(btime).arg(btype); }
+              else {searchsettingsummary += QString("Wrong! \n only For Buy, For Sell, or Buy & Sell match with Opening that can has Amount."); }
+    ui->textEdit_searchsettingsummary->setText(searchsettingsummary);
+    searchsettingsummary = "";
 }
 
-void UtopiacoinGUI::createMenuBar()
-{
-#ifdef Q_OS_MAC
-    // Create a decoupled menu bar on Mac which stays even if the window is closed
-    appMenuBar = new QMenuBar();
-#else
-    // Get the main window's menu bar on other platforms
-    appMenuBar = menuBar();
-#endif
-
-    // Configure the menus
-    QMenu *file = appMenuBar->addMenu(tr("&File"));
-    if(walletFrame)
-    {
-        file->addAction(openAction);
-        file->addAction(backupWalletAction);
-        file->addAction(signMessageAction);
-        file->addAction(verifyMessageAction);
-        file->addSeparator();
-        file->addAction(usedSendingAddressesAction);
-        file->addAction(usedReceivingAddressesAction);
-        file->addSeparator();
-    }
-    file->addAction(quitAction);
-
-    QMenu *settings = appMenuBar->addMenu(tr("&Settings"));
-    if(walletFrame)
-    {
-        settings->addAction(encryptWalletAction);
-        settings->addAction(changePassphraseAction);
-        settings->addSeparator();
-    }
-    settings->addAction(optionsAction);
-
-    QMenu *help = appMenuBar->addMenu(tr("&Help"));
-    if(walletFrame)
-    {
-        help->addAction(openRPCConsoleAction);
-    }
-    help->addAction(showHelpMessageAction);
-    help->addSeparator();
-    help->addAction(aboutAction);
-    help->addAction(aboutQtAction);
+void UtopiacoinGUI::on_pushButton_getsearchingresult_clicked()
+{    // search required and show the result in the textEdit.
+     // lineEdit_search input is exclusived with all other settings (Asset, Time, Type, and or Amount).
+     // rpc: listsinceblock (getbestblockhash);                       // default result for browser
 }
 
-void UtopiacoinGUI::createToolBars()
-{
-    if(walletFrame)
-    {
-        QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
-        toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
-        toolbar->setMovable(false);
-        toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-        toolbar->addAction(overviewAction);
-        toolbar->addAction(sendCoinsAction);
-        toolbar->addAction(receiveCoinsAction);
-        toolbar->addAction(historyAction);
-        overviewAction->setChecked(true);
-    }
+// show textEdit with :  search result of Block, Transaction, or Address. Default show the Opening Transaction of all asset and all amount.
+
+
+///////////////////// Accounting page ////////////////////////////////////////////////////////
+void UtopiacoinGUI::on_pushButton_receivingaddressbook_clicked()
+{  // open Receiving Address Book}
+
+
 }
 
-void UtopiacoinGUI::setClientModel(ClientModel *_clientModel)
-{
-    this->clientModel = _clientModel;
-    if(_clientModel)
-    {
-        // Create system tray menu (or setup the dock menu) that late to prevent users from calling actions,
-        // while the client has not yet fully loaded
-        createTrayIconMenu();
+void UtopiacoinGUI::on_pushButton_sendingaddressbook_clicked()
+{  // open Sending Address Book
 
-        // Keep up to date with client
-        updateNetworkState();
-        connect(_clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
-        connect(_clientModel, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
-
-        modalOverlay->setKnownBestHeight(_clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(_clientModel->getHeaderTipTime()));
-        setNumBlocks(_clientModel->getNumBlocks(), _clientModel->getLastBlockDate(), _clientModel->getVerificationProgress(nullptr), false);
-        connect(_clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double,bool)), this, SLOT(setNumBlocks(int,QDateTime,double,bool)));
-
-        // Receive and report messages from client model
-        connect(_clientModel, SIGNAL(message(QString,QString,unsigned int)), this, SLOT(message(QString,QString,unsigned int)));
-
-        // Show progress dialog
-        connect(_clientModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
-
-        rpcConsole->setClientModel(_clientModel);
-#ifdef ENABLE_WALLET
-        if(walletFrame)
-        {
-            walletFrame->setClientModel(_clientModel);
-        }
-#endif // ENABLE_WALLET
-        unitDisplayControl->setOptionsModel(_clientModel->getOptionsModel());
-        
-        OptionsModel* optionsModel = _clientModel->getOptionsModel();
-        if(optionsModel)
-        {
-            // be aware of the tray icon disable state change reported by the OptionsModel object.
-            connect(optionsModel,SIGNAL(hideTrayIconChanged(bool)),this,SLOT(setTrayIconVisible(bool)));
-        
-            // initialize the disable state of the tray icon with the current value in the model.
-            setTrayIconVisible(optionsModel->getHideTrayIcon());
-        }
-    } else {
-        // Disable possibility to show main window via action
-        toggleHideAction->setEnabled(false);
-        if(trayIconMenu)
-        {
-            // Disable context menu on tray icon
-            trayIconMenu->clear();
-        }
-        // Propagate cleared model to child objects
-        rpcConsole->setClientModel(nullptr);
-#ifdef ENABLE_WALLET
-        if (walletFrame)
-        {
-            walletFrame->setClientModel(nullptr);
-        }
-#endif // ENABLE_WALLET
-        unitDisplayControl->setOptionsModel(nullptr);
-    }
 }
 
-#ifdef ENABLE_WALLET
-bool UtopiacoinGUI::addWallet(const QString& name, WalletModel *walletModel)
+
+///////////////////// Exchange page //////////////////////////////////////////////////////////
+void UtopiacoinGUI::on_tabWidget_tabBarClicked(int index)
 {
-    if(!walletFrame)
-        return false;
-    setWalletActionsEnabled(true);
-    return walletFrame->addWallet(name, walletModel);
+    ui->tabWidget_exchange->setCurrentIndex(0);                                                  // when tabWidget_exchange clicked, always open the Sending page first.
+    recipientitem1(1);
+    ui->label_totalrecipientnumber->setText("1 Recipient");
 }
 
-bool UtopiacoinGUI::setCurrentWallet(const QString& name)
-{
-    if(!walletFrame)
-        return false;
-    return walletFrame->setCurrentWallet(name);
-}
-
-void UtopiacoinGUI::removeAllWallets()
-{
-    if(!walletFrame)
+              /////// Sending page ///////
+int              totalrecipientnumber = 1;
+QVector<QString> vector_recipientaddress(10);
+QVector<QString> vector_recipientamount(10);
+double           sendingamountsummary = 0.00000000;
+QString          sendingsummary = "";
+void UtopiacoinGUI::on_pushButton_addmorerecipient_clicked()
+{    // once click will add one more recipient (one groupBox_singlerecipientinfo)
+    totalrecipientnumber++;
+    if (totalrecipientnumber > 10)                                                               // limit the recipient to 10
         return;
-    setWalletActionsEnabled(false);
-    walletFrame->removeAllWallets();
-}
-#endif // ENABLE_WALLET
-
-void UtopiacoinGUI::setWalletActionsEnabled(bool enabled)
-{
-    overviewAction->setEnabled(enabled);
-    sendCoinsAction->setEnabled(enabled);
-    sendCoinsMenuAction->setEnabled(enabled);
-    receiveCoinsAction->setEnabled(enabled);
-    receiveCoinsMenuAction->setEnabled(enabled);
-    historyAction->setEnabled(enabled);
-    encryptWalletAction->setEnabled(enabled);
-    backupWalletAction->setEnabled(enabled);
-    changePassphraseAction->setEnabled(enabled);
-    signMessageAction->setEnabled(enabled);
-    verifyMessageAction->setEnabled(enabled);
-    usedSendingAddressesAction->setEnabled(enabled);
-    usedReceivingAddressesAction->setEnabled(enabled);
-    openAction->setEnabled(enabled);
+    recipientitem1(totalrecipientnumber);
+    ui->label_totalrecipientnumber->setText((QString::number(totalrecipientnumber)) + " Recipients");
 }
 
-void UtopiacoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
-{
-#ifndef Q_OS_MAC
-    trayIcon = new QSystemTrayIcon(this);
-    QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + networkStyle->getTitleAddText();
-    trayIcon->setToolTip(toolTip);
-    trayIcon->setIcon(networkStyle->getTrayAndWindowIcon());
-    trayIcon->hide();
-#endif
-
-    notificator = new Notificator(QApplication::applicationName(), trayIcon, this);
+void UtopiacoinGUI::on_pushButton_cleanallsendinginput_clicked()
+{    // clean all input data.
+    ui->comboBox_assetsymbol->setCurrentIndex(0);
+    ui->tableWidget_addmorerecipient->clearContents();
+    ui->tableWidget_addmorerecipient->setRowCount(3);
+    totalrecipientnumber = 1;
+    recipientitem1(totalrecipientnumber);
+    ui->label_totalrecipientnumber->setText("1 Recipient");
+    vector_recipientaddress.fill("", -1);
+    vector_recipientamount.fill("", -1);
+    sendingamountsummary = 0.00000000;
+    ui->textEdit_sendingsummary->clear();
 }
 
-void UtopiacoinGUI::createTrayIconMenu()
-{
-#ifndef Q_OS_MAC
-    // return if trayIcon is unset (only on non-Mac OSes)
-    if (!trayIcon)
-        return;
-
-    trayIconMenu = new QMenu(this);
-    trayIcon->setContextMenu(trayIconMenu);
-
-    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-            this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
-#else
-    // Note: On Mac, the dock icon is used to provide the tray's functionality.
-    MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
-    dockIconHandler->setMainWindow((QMainWindow *)this);
-    trayIconMenu = dockIconHandler->dockMenu();
-#endif
-
-    // Configuration of the tray icon (or dock icon) icon menu
-    trayIconMenu->addAction(toggleHideAction);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(sendCoinsMenuAction);
-    trayIconMenu->addAction(receiveCoinsMenuAction);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(signMessageAction);
-    trayIconMenu->addAction(verifyMessageAction);
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(optionsAction);
-    trayIconMenu->addAction(openRPCConsoleAction);
-#ifndef Q_OS_MAC // This is built-in on Mac
-    trayIconMenu->addSeparator();
-    trayIconMenu->addAction(quitAction);
-#endif
+void UtopiacoinGUI::on_pushButton_chooseaddress_clicked()
+{    // open the Sending Address Book to chose a address for sending asset
+}
+void UtopiacoinGUI::on_pushButton_putsendingorder_clicked()
+{    // build the sending asset transaction and sent it out
+    QString symbol = ui->comboBox_assetsymbol->currentText();
+    int nullrecivientnum = 0;
+    sendingsummary += QString("Send the asset symbol (%1) to:\n").arg(symbol);
+    for (int i = 1; i<=ui->tableWidget_addmorerecipient->rowCount()/3; ++i){
+        QWidget   *widgetaddress=ui->tableWidget_addmorerecipient->cellWidget((i-1)*3+1,1);    //获得widget
+        QWidget   *widgetamount=ui->tableWidget_addmorerecipient->cellWidget((i-1)*3+2,1);
+        QLineEdit *recipientaddress1=(QLineEdit*)widgetaddress;                                //强制转化为QLineEdit
+        QLineEdit *recipientamount1=(QLineEdit*)widgetamount;
+        QString   tempaddress = recipientaddress1->text();
+        QString   tempamount = recipientamount1->text();
+        vector_recipientaddress[i-1] = tempaddress;
+        vector_recipientamount[i-1] = tempamount;
+        if (tempaddress!="" && tempamount>0){
+            sendingsummary += QString("   %2: address/amount  (%3 / %4).\n").arg(i).arg(tempaddress).arg(tempamount);
+            sendingamountsummary += tempamount.toDouble();  }
+        else { nullrecivientnum++;                          }               }
+    QString a=QString::number(sendingamountsummary,'f',8);
+    sendingsummary += QString("The total sending address is (%1), the total sending amount is (%2).").arg(ui->tableWidget_addmorerecipient->rowCount()/3-nullrecivientnum).arg(a);
+    if (sendingamountsummary > 0) {
+        ui->textEdit_sendingsummary->setText(sendingsummary);
+        sendingamountsummary = 0.00000000;
+        sendingsummary = "";
+        nullrecivientnum = 0;      }
+    else{ UtopiacoinGUI::on_pushButton_cleanallsendinginput_clicked(); }
 }
 
-#ifndef Q_OS_MAC
-void UtopiacoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
-{
-    if(reason == QSystemTrayIcon::Trigger)
-    {
-        // Click on system tray icon triggers show/hide of the main window
-        toggleHidden();
-    }
+              /////// Exchanging page ///////
+void UtopiacoinGUI::on_pushButton_choosereceivingaddress_clicked()
+{  // open Receiving Address Book to chose a receiving address
+
 }
-#endif
-
-void UtopiacoinGUI::optionsClicked()
-{
-    if(!clientModel || !clientModel->getOptionsModel())
-        return;
-
-    OptionsDialog dlg(this, enableWallet);
-    dlg.setModel(clientModel->getOptionsModel());
-    dlg.exec();
+void UtopiacoinGUI::on_pushButton_cleanallexchanginginputs_clicked()
+{   // clean all exchanging inputs
+    ui->comboBox_outassetsymbol->setCurrentIndex(0);
+    ui->lineEdit_outtimelimit->clear();
+    ui->lineEdit_outamount->clear();
+    ui->comboBox_inassetsymbol->setCurrentIndex(0);
+    ui->lineEdit_inamount->clear();
+    ui->checkBox_inpartially->setChecked(false);
+    ui->lineEdit_inaddress->clear();
+    ui->textEdit_exchangingsummary->clear();
 }
 
-void UtopiacoinGUI::aboutClicked()
-{
-    if(!clientModel)
-        return;
+QString exchangingsummary = "";
+void UtopiacoinGUI::on_pushButton_putexchangingorder_clicked()
+{  // construct exchanging transactions and send them.
+    QString outsymbol = ui->comboBox_outassetsymbol->currentText();
+    QString insymbol =  ui->comboBox_inassetsymbol->currentText();
+    double outamount =  ui->lineEdit_outamount->text().toDouble();
+    double inamount =   ui->lineEdit_inamount->text().toDouble();
+    QString soutamount =QString::number(outamount,'f',8);
+    QString sinamount = QString::number(inamount,'f',8);
+    QString inaddress = ui->lineEdit_inaddress->text();
+    int outtimelimit =  ui->lineEdit_outtimelimit->text().toInt();
+    exchangingsummary = QString("Want to use:        amount (%1) of asset symbol (%2)"
+                              "\nTo exchange:       amount (%3) of asset symbol (%4) "
+                              "\nReceiving with:    address (%6) for the asset symbol (%5)\n")
+                              .arg(soutamount).arg(outsymbol).arg(sinamount).arg(insymbol).arg(insymbol).arg(inaddress);
+    if (outtimelimit>0){
+        exchangingsummary += QString("The time limit:     for this exchange is %1 block (about 10 minute per block).\n").arg(outtimelimit); }
+    if (ui->checkBox_inpartially->isChecked()){
+        exchangingsummary += QString("The amount:        for this exchange is changable (<%3) at the same exchange rate of (%1 / %2)")
+                                    .arg(soutamount).arg(sinamount).arg(sinamount);                                     }
+    if(outamount > 0 && inamount > 0 && inaddress != "" )   {
+        ui->textEdit_exchangingsummary->setText(exchangingsummary);
+        exchangingsummary = "";                              }
+    else { on_pushButton_cleanallexchanginginputs_clicked(); }
 
-    HelpMessageDialog dlg(this, true);
-    dlg.exec();
 }
 
-void UtopiacoinGUI::showDebugWindow()
-{
-    rpcConsole->showNormal();
-    rpcConsole->show();
-    rpcConsole->raise();
-    rpcConsole->activateWindow();
+              /////// Listing page ///////
+void UtopiacoinGUI::on_pushButton_createowneraddress_clicked()
+{    // generate a grand new  address for the new listing asset owner
+
+}
+double totalamount = 0;
+double smallestunit = 0.00000000;
+double neededUMpSamount = 0.00000000;
+QString sneededUMpSamount = "";
+QString ssmallestunit = "";
+void UtopiacoinGUI::on_comboBox_samllestunit_currentTextChanged(const QString &arg1){
+    smallestunit = arg1.toDouble();
+    neededUMpSamount = totalamount / smallestunit;
+    sneededUMpSamount = QString::number(neededUMpSamount,'f',0);
+    ui->label_amountofUMpSneeded->setText(sneededUMpSamount);                    }
+void UtopiacoinGUI::on_lineEdit_totalamount_editingFinished()    {
+    totalamount = ui->lineEdit_totalamount->text().toDouble();
+    ssmallestunit = QString::number(smallestunit,'f',8);
+    on_comboBox_samllestunit_currentTextChanged(ssmallestunit);
+}
+void UtopiacoinGUI::on_radioButton_yourwallet_pressed()          {
+    ui->lineEdit_withUMpTamount->clear();                                // if your wallet button selected, clear With UMpT Amount
+    ui->label_availablesendamount->setText("Available UMpT"); }
+void UtopiacoinGUI::on_radioButton_exchange_pressed()  { // show the Available UMpT amount
+                                                    }
+void UtopiacoinGUI::on_pushButton_cleanalllistinginputs_clicked(){          // clean all listing inputs
+    ui->lineEdit_assetsymbol->clear();
+    ui->lineEdit_assetname->clear();
+    ui->lineEdit_totalamount->clear();
+    ui->comboBox_samllestunit->setCurrentIndex(0);
+    ui->lineEdit_owneraddress->clear();
+    ui->lineEdit_description->clear();
+    ui->lineEdit_withUMpTamount->clear();
+    ui->radioButton_exchange->setChecked(true);
+    ui->textEdit_listingsummary->clear();                      }
+QString listingsummary = "";
+void UtopiacoinGUI::on_pushButton_putlistingorder_clicked()
+{    // construct new listing new asset transaction and send them out.
+    QString assetsymbol =   ui->lineEdit_assetsymbol->text();
+    QString assetname =     ui->lineEdit_assetname->text();
+    QString owneraddress =  ui->lineEdit_owneraddress->text();
+    QString description =   ui->lineEdit_description->text();
+    double withUMpTamount = ui->lineEdit_withUMpTamount->text().toDouble();
+    QString swithUMpTamount =   QString::number(withUMpTamount,'f',8);
+    QString stotalamount =      QString::number(totalamount,'f',0);
+    listingsummary = QString("The new listing exchangable asset:\n"
+                             "    asset symbol: (%1);          asset name: (%2);       total amount: (%3);\n"
+                             "    smallest unit:  (%4);  owner address: (%5);\n"
+                             "    description:    (%6).\n"
+                             "This listing needed UMpS (%7) by ")
+                             .arg(assetsymbol).arg(assetname).arg(stotalamount).arg(ssmallestunit)
+                             .arg(owneraddress).arg(description).arg(sneededUMpSamount);
+    if (ui->radioButton_exchange->isChecked())  {
+        listingsummary += QString("exchanging with amount (%1) of UMpT.").arg(swithUMpTamount);   }
+    else {  listingsummary += QString("your wallet.");    }
+    if (assetsymbol != "" && totalamount > 0 && smallestunit > 0 && owneraddress != ""){
+        ui->textEdit_listingsummary->setText(listingsummary);
+        listingsummary = "";                                                           }
+    else { on_pushButton_cleanalllistinginputs_clicked(); }
 }
 
-void UtopiacoinGUI::showDebugWindowActivateConsole()
+            /////// Posting page ///////
+double postingfeerate = 0.01;                                             // the rate is the UMpT number per 100 bytes of input.
+double postingfee = 0.00;
+int postingtextnumber = 0;
+void UtopiacoinGUI::on_textEdit_announcementwindow_textChanged()
 {
-    rpcConsole->setTabFocus(RPCConsole::TAB_CONSOLE);
-    showDebugWindow();
+    postingtextnumber = ui->textEdit_announcementwindow->toPlainText().length();
+    postingfee = postingtextnumber * postingfeerate;
+    ui->label_announcementfee->setText(QString::number(postingfee));
+}
+void UtopiacoinGUI::on_pushButton_cleanannouncinginput_clicked()
+{   // clean your announcement input
+    ui->textEdit_announcementwindow->clear();
+    ui->label_announcementfee->clear();
+    ui->textEdit_postingsummary->clear();
+}
+QString postingsummary = "";
+void UtopiacoinGUI::on_pushButton_postannouncement_clicked()
+{   // construct the posting announcement transaction and send it out.
+    postingsummary = QString("   This posting has total (%1) charactor, space, and symbol.\n"
+                             "   This posting costs total (%2) of UMpT - asset symbol 222\n\n"
+                             "   Now the posting fee rate is (%3)").arg(postingtextnumber).arg(postingfee).arg(postingfeerate);
+    if (postingtextnumber>0)  {
+        ui->textEdit_postingsummary->setText(postingsummary);
+        postingsummary = "";  }
 }
 
-void UtopiacoinGUI::showHelpMessageClicked()
-{
-    helpMessageDialog->show();
+
+///////////////////////// Manager page ///////////////////////////////////////////
+void UtopiacoinGUI::on_pushButton_leaveutopiamarketplace_clicked()
+{   // close utopia market system and leave the marketplace
+    close();
+
 }
 
-#ifdef ENABLE_WALLET
-void UtopiacoinGUI::openClicked()
-{
-    OpenURIDialog dlg(this);
-    if(dlg.exec())
-    {
-        Q_EMIT receivedURI(dlg.getURI());
-    }
+void UtopiacoinGUI::on_pushButton_backupwallet_clicked()
+{    // backup your wallet, like former File->Backup Wallet.
+
 }
 
-void UtopiacoinGUI::gotoOverviewPage()
-{
-    overviewAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoOverviewPage();
+void UtopiacoinGUI::on_pushButton_encryptwallet_clicked()
+{    // encrypt your wallet, like Setting->Encrypt Wallet.
+
 }
 
-void UtopiacoinGUI::gotoHistoryPage()
-{
-    historyAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoHistoryPage();
+void UtopiacoinGUI::on_pushButton_changepassphrase_clicked()
+{    // change your wallet passphrase, like Setting->Change Passphrase. ---- askpassphrasedialog.ui
+
 }
 
-void UtopiacoinGUI::gotoReceiveCoinsPage()
-{
-    receiveCoinsAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoReceiveCoinsPage();
+void UtopiacoinGUI::on_pushButton_signmessage_clicked()
+{    // open sign message window, like File->Sign message.  ---- signverifymessagedialog.ui
+
 }
 
-void UtopiacoinGUI::gotoSendCoinsPage(QString addr)
-{
-    sendCoinsAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoSendCoinsPage(addr);
+void UtopiacoinGUI::on_pushButton_verifymessage_clicked()
+{   // open verify message window, like File->Verify message. ----signverifymessagedialog.ui
+
 }
 
-void UtopiacoinGUI::gotoSignMessageTab(QString addr)
-{
-    if (walletFrame) walletFrame->gotoSignMessageTab(addr);
+void UtopiacoinGUI::on_pushButton_networkinformation_clicked()
+{   // open network information window, like Help->Debug Window->Information and Network Traffic part
+
 }
 
-void UtopiacoinGUI::gotoVerifyMessageTab(QString addr)
-{
-    if (walletFrame) walletFrame->gotoVerifyMessageTab(addr);
-}
-#endif // ENABLE_WALLET
+void UtopiacoinGUI::on_pushButton_managepeers_clicked()
+{   // open mangae peers window
 
-void UtopiacoinGUI::updateNetworkState()
-{
-    int count = clientModel->getNumConnections();
-    QString icon;
-    switch(count)
-    {
-    case 0: icon = ":/icons/connect_0"; break;
-    case 1: case 2: case 3: icon = ":/icons/connect_1"; break;
-    case 4: case 5: case 6: icon = ":/icons/connect_2"; break;
-    case 7: case 8: case 9: icon = ":/icons/connect_3"; break;
-    default: icon = ":/icons/connect_4"; break;
-    }
-
-    QString tooltip;
-
-    if (clientModel->getNetworkActive()) {
-        tooltip = tr("%n active connection(s) to Utopiacoin network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
-    } else {
-        tooltip = tr("Network activity disabled.") + QString("<br>") + tr("Click to enable network activity again.");
-        icon = ":/icons/network_disabled";
-    }
-
-    // Don't word-wrap this (fixed-width) tooltip
-    tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
-    connectionsControl->setToolTip(tooltip);
-
-    connectionsControl->setPixmap(platformStyle->SingleColorIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-}
-
-void UtopiacoinGUI::setNumConnections(int count)
-{
-    updateNetworkState();
-}
-
-void UtopiacoinGUI::setNetworkActive(bool networkActive)
-{
-    updateNetworkState();
-}
-
-void UtopiacoinGUI::updateHeadersSyncProgressLabel()
-{
-    int64_t headersTipTime = clientModel->getHeaderTipTime();
-    int headersTipHeight = clientModel->getHeaderTipHeight();
-    int estHeadersLeft = (GetTime() - headersTipTime) / Params().GetConsensus().nPowTargetSpacing;
-    if (estHeadersLeft > HEADER_HEIGHT_DELTA_SYNC)
-        progressBarLabel->setText(tr("Syncing Headers (%1%)...").arg(QString::number(100.0 / (headersTipHeight+estHeadersLeft)*headersTipHeight, 'f', 1)));
-}
-
-void UtopiacoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header)
-{
-    if (modalOverlay)
-    {
-        if (header)
-            modalOverlay->setKnownBestHeight(count, blockDate);
-        else
-            modalOverlay->tipUpdate(count, blockDate, nVerificationProgress);
-    }
-    if (!clientModel)
-        return;
-
-    // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbled text)
-    statusBar()->clearMessage();
-
-    // Acquire current block source
-    enum BlockSource blockSource = clientModel->getBlockSource();
-    switch (blockSource) {
-        case BLOCK_SOURCE_NETWORK:
-            if (header) {
-                updateHeadersSyncProgressLabel();
-                return;
-            }
-            progressBarLabel->setText(tr("Synchronizing with network..."));
-            updateHeadersSyncProgressLabel();
-            break;
-        case BLOCK_SOURCE_DISK:
-            if (header) {
-                progressBarLabel->setText(tr("Indexing blocks on disk..."));
-            } else {
-                progressBarLabel->setText(tr("Processing blocks on disk..."));
-            }
-            break;
-        case BLOCK_SOURCE_REINDEX:
-            progressBarLabel->setText(tr("Reindexing blocks on disk..."));
-            break;
-        case BLOCK_SOURCE_NONE:
-            if (header) {
-                return;
-            }
-            progressBarLabel->setText(tr("Connecting to peers..."));
-            break;
-    }
-
-    QString tooltip;
-
-    QDateTime currentDate = QDateTime::currentDateTime();
-    qint64 secs = blockDate.secsTo(currentDate);
-
-    tooltip = tr("Processed %n block(s) of transaction history.", "", count);
-
-    // Set icon state: spinning if catching up, tick otherwise
-    if(secs < 90*60)
-    {
-        tooltip = tr("Up to date") + QString(".<br>") + tooltip;
-        labelBlocksIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-
-#ifdef ENABLE_WALLET
-        if(walletFrame)
-        {
-            walletFrame->showOutOfSyncWarning(false);
-            modalOverlay->showHide(true, true);
-        }
-#endif // ENABLE_WALLET
-
-        progressBarLabel->setVisible(false);
-        progressBar->setVisible(false);
-    }
-    else
-    {
-        QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
-
-        progressBarLabel->setVisible(true);
-        progressBar->setFormat(tr("%1 behind").arg(timeBehindText));
-        progressBar->setMaximum(1000000000);
-        progressBar->setValue(nVerificationProgress * 1000000000.0 + 0.5);
-        progressBar->setVisible(true);
-
-        tooltip = tr("Catching up...") + QString("<br>") + tooltip;
-        if(count != prevBlocks)
-        {
-            labelBlocksIcon->setPixmap(platformStyle->SingleColorIcon(QString(
-                ":/movies/spinner-%1").arg(spinnerFrame, 3, 10, QChar('0')))
-                .pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-            spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
-        }
-        prevBlocks = count;
-
-#ifdef ENABLE_WALLET
-        if(walletFrame)
-        {
-            walletFrame->showOutOfSyncWarning(true);
-            modalOverlay->showHide();
-        }
-#endif // ENABLE_WALLET
-
-        tooltip += QString("<br>");
-        tooltip += tr("Last received block was generated %1 ago.").arg(timeBehindText);
-        tooltip += QString("<br>");
-        tooltip += tr("Transactions after this will not yet be visible.");
-    }
-
-    // Don't word-wrap this (fixed-width) tooltip
-    tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
-
-    labelBlocksIcon->setToolTip(tooltip);
-    progressBarLabel->setToolTip(tooltip);
-    progressBar->setToolTip(tooltip);
-}
-
-void UtopiacoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
-{
-    QString strTitle = tr("Utopiacoin"); // default title
-    // Default to information icon
-    int nMBoxIcon = QMessageBox::Information;
-    int nNotifyIcon = Notificator::Information;
-
-    QString msgType;
-
-    // Prefer supplied title over style based title
-    if (!title.isEmpty()) {
-        msgType = title;
-    }
-    else {
-        switch (style) {
-        case CClientUIInterface::MSG_ERROR:
-            msgType = tr("Error");
-            break;
-        case CClientUIInterface::MSG_WARNING:
-            msgType = tr("Warning");
-            break;
-        case CClientUIInterface::MSG_INFORMATION:
-            msgType = tr("Information");
-            break;
-        default:
-            break;
-        }
-    }
-    // Append title to "Utopiacoin - "
-    if (!msgType.isEmpty())
-        strTitle += " - " + msgType;
-
-    // Check for error/warning icon
-    if (style & CClientUIInterface::ICON_ERROR) {
-        nMBoxIcon = QMessageBox::Critical;
-        nNotifyIcon = Notificator::Critical;
-    }
-    else if (style & CClientUIInterface::ICON_WARNING) {
-        nMBoxIcon = QMessageBox::Warning;
-        nNotifyIcon = Notificator::Warning;
-    }
-
-    // Display message
-    if (style & CClientUIInterface::MODAL) {
-        // Check for buttons, use OK as default, if none was supplied
-        QMessageBox::StandardButton buttons;
-        if (!(buttons = (QMessageBox::StandardButton)(style & CClientUIInterface::BTN_MASK)))
-            buttons = QMessageBox::Ok;
-
-        showNormalIfMinimized();
-        QMessageBox mBox((QMessageBox::Icon)nMBoxIcon, strTitle, message, buttons, this);
-        int r = mBox.exec();
-        if (ret != nullptr)
-            *ret = r == QMessageBox::Ok;
-    }
-    else
-        notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message);
-}
-
-void UtopiacoinGUI::changeEvent(QEvent *e)
-{
-    QMainWindow::changeEvent(e);
-#ifndef Q_OS_MAC // Ignored on Mac
-    if(e->type() == QEvent::WindowStateChange)
-    {
-        if(clientModel && clientModel->getOptionsModel() && clientModel->getOptionsModel()->getMinimizeToTray())
-        {
-            QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
-            if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
-            {
-                QTimer::singleShot(0, this, SLOT(hide()));
-                e->ignore();
-            }
-        }
-    }
-#endif
-}
-
-void UtopiacoinGUI::closeEvent(QCloseEvent *event)
-{
-#ifndef Q_OS_MAC // Ignored on Mac
-    if(clientModel && clientModel->getOptionsModel())
-    {
-        if(!clientModel->getOptionsModel()->getMinimizeOnClose())
-        {
-            // close rpcConsole in case it was open to make some space for the shutdown window
-            rpcConsole->close();
-
-            QApplication::quit();
-        }
-        else
-        {
-            QMainWindow::showMinimized();
-            event->ignore();
-        }
-    }
-#else
-    QMainWindow::closeEvent(event);
-#endif
-}
-
-void UtopiacoinGUI::showEvent(QShowEvent *event)
-{
-    // enable the debug window when the main window shows up
-    openRPCConsoleAction->setEnabled(true);
-    aboutAction->setEnabled(true);
-    optionsAction->setEnabled(true);
-}
-
-#ifdef ENABLE_WALLET
-void UtopiacoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label)
-{
-    // On new transaction, make an info balloon
-    QString msg = tr("Date: %1\n").arg(date) +
-                  tr("Amount: %1\n").arg(UtopiacoinUnits::formatWithUnit(unit, amount, true)) +
-                  tr("Type: %1\n").arg(type);
-    if (!label.isEmpty())
-        msg += tr("Label: %1\n").arg(label);
-    else if (!address.isEmpty())
-        msg += tr("Address: %1\n").arg(address);
-    message((amount)<0 ? tr("Sent transaction") : tr("Incoming transaction"),
-             msg, CClientUIInterface::MSG_INFORMATION);
-}
-#endif // ENABLE_WALLET
-
-void UtopiacoinGUI::dragEnterEvent(QDragEnterEvent *event)
-{
-    // Accept only URIs
-    if(event->mimeData()->hasUrls())
-        event->acceptProposedAction();
-}
-
-void UtopiacoinGUI::dropEvent(QDropEvent *event)
-{
-    if(event->mimeData()->hasUrls())
-    {
-        for (const QUrl &uri : event->mimeData()->urls())
-        {
-            Q_EMIT receivedURI(uri.toString());
-        }
-    }
-    event->acceptProposedAction();
-}
-
-bool UtopiacoinGUI::eventFilter(QObject *object, QEvent *event)
-{
-    // Catch status tip events
-    if (event->type() == QEvent::StatusTip)
-    {
-        // Prevent adding text from setStatusTip(), if we currently use the status bar for displaying other stuff
-        if (progressBarLabel->isVisible() || progressBar->isVisible())
-            return true;
-    }
-    return QMainWindow::eventFilter(object, event);
-}
-
-#ifdef ENABLE_WALLET
-bool UtopiacoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
-{
-    // URI has to be valid
-    if (walletFrame && walletFrame->handlePaymentRequest(recipient))
-    {
-        showNormalIfMinimized();
-        gotoSendCoinsPage();
-        return true;
-    }
-    return false;
-}
-
-void UtopiacoinGUI::setHDStatus(int hdEnabled)
-{
-    labelWalletHDStatusIcon->setPixmap(platformStyle->SingleColorIcon(hdEnabled ? ":/icons/hd_enabled" : ":/icons/hd_disabled").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelWalletHDStatusIcon->setToolTip(hdEnabled ? tr("HD key generation is <b>enabled</b>") : tr("HD key generation is <b>disabled</b>"));
-
-    // eventually disable the QLabel to set its opacity to 50% 
-    labelWalletHDStatusIcon->setEnabled(hdEnabled);
-}
-
-void UtopiacoinGUI::setEncryptionStatus(int status)
-{
-    switch(status)
-    {
-    case WalletModel::Unencrypted:
-        labelWalletEncryptionIcon->hide();
-        encryptWalletAction->setChecked(false);
-        changePassphraseAction->setEnabled(false);
-        encryptWalletAction->setEnabled(true);
-        break;
-    case WalletModel::Unlocked:
-        labelWalletEncryptionIcon->show();
-        labelWalletEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
-        encryptWalletAction->setChecked(true);
-        changePassphraseAction->setEnabled(true);
-        encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
-        break;
-    case WalletModel::Locked:
-        labelWalletEncryptionIcon->show();
-        labelWalletEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_closed").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
-        encryptWalletAction->setChecked(true);
-        changePassphraseAction->setEnabled(true);
-        encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
-        break;
-    }
-}
-#endif // ENABLE_WALLET
-
-void UtopiacoinGUI::showNormalIfMinimized(bool fToggleHidden)
-{
-    if(!clientModel)
-        return;
-
-    // activateWindow() (sometimes) helps with keyboard focus on Windows
-    if (isHidden())
-    {
-        show();
-        activateWindow();
-    }
-    else if (isMinimized())
-    {
-        showNormal();
-        activateWindow();
-    }
-    else if (GUIUtil::isObscured(this))
-    {
-        raise();
-        activateWindow();
-    }
-    else if(fToggleHidden)
-        hide();
-}
-
-void UtopiacoinGUI::toggleHidden()
-{
-    showNormalIfMinimized(true);
-}
-
-void UtopiacoinGUI::detectShutdown()
-{
-    if (ShutdownRequested())
-    {
-        if(rpcConsole)
-            rpcConsole->hide();
-        qApp->quit();
-    }
-}
-
-void UtopiacoinGUI::showProgress(const QString &title, int nProgress)
-{
-    if (nProgress == 0)
-    {
-        progressDialog = new QProgressDialog(title, "", 0, 100);
-        progressDialog->setWindowModality(Qt::ApplicationModal);
-        progressDialog->setMinimumDuration(0);
-        progressDialog->setCancelButton(0);
-        progressDialog->setAutoClose(false);
-        progressDialog->setValue(0);
-    }
-    else if (nProgress == 100)
-    {
-        if (progressDialog)
-        {
-            progressDialog->close();
-            progressDialog->deleteLater();
-        }
-    }
-    else if (progressDialog)
-        progressDialog->setValue(nProgress);
-}
-
-void UtopiacoinGUI::setTrayIconVisible(bool fHideTrayIcon)
-{
-    if (trayIcon)
-    {
-        trayIcon->setVisible(!fHideTrayIcon);
-    }
-}
-
-void UtopiacoinGUI::showModalOverlay()
-{
-    if (modalOverlay && (progressBar->isVisible() || modalOverlay->isLayerVisible()))
-        modalOverlay->toggleVisibility();
-}
-
-static bool ThreadSafeMessageBox(UtopiacoinGUI *gui, const std::string& message, const std::string& caption, unsigned int style)
-{
-    bool modal = (style & CClientUIInterface::MODAL);
-    // The SECURE flag has no effect in the Qt GUI.
-    // bool secure = (style & CClientUIInterface::SECURE);
-    style &= ~CClientUIInterface::SECURE;
-    bool ret = false;
-    // In case of modal message, use blocking connection to wait for user to click a button
-    QMetaObject::invokeMethod(gui, "message",
-                               modal ? GUIUtil::blockingGUIThreadConnection() : Qt::QueuedConnection,
-                               Q_ARG(QString, QString::fromStdString(caption)),
-                               Q_ARG(QString, QString::fromStdString(message)),
-                               Q_ARG(unsigned int, style),
-                               Q_ARG(bool*, &ret));
-    return ret;
-}
-
-void UtopiacoinGUI::subscribeToCoreSignals()
-{
-    // Connect signals to client
-    uiInterface.ThreadSafeMessageBox.connect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
-    uiInterface.ThreadSafeQuestion.connect(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
-}
-
-void UtopiacoinGUI::unsubscribeFromCoreSignals()
-{
-    // Disconnect signals from client
-    uiInterface.ThreadSafeMessageBox.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
-    uiInterface.ThreadSafeQuestion.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
-}
-
-void UtopiacoinGUI::toggleNetworkActive()
-{
-    if (clientModel) {
-        clientModel->setNetworkActive(!clientModel->getNetworkActive());
-    }
-}
-
-UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle *platformStyle) :
-    optionsModel(0),
-    menu(0)
-{
-    createContextMenu();
-    setToolTip(tr("Unit to show amounts in. Click to select another unit."));
-    QList<UtopiacoinUnits::Unit> units = UtopiacoinUnits::availableUnits();
-    int max_width = 0;
-    const QFontMetrics fm(font());
-    for (const UtopiacoinUnits::Unit unit : units)
-    {
-        max_width = qMax(max_width, fm.width(UtopiacoinUnits::longName(unit)));
-    }
-    setMinimumSize(max_width, 0);
-    setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    setStyleSheet(QString("QLabel { color : %1 }").arg(platformStyle->SingleColor().name()));
-}
-
-/** So that it responds to button clicks */
-void UnitDisplayStatusBarControl::mousePressEvent(QMouseEvent *event)
-{
-    onDisplayUnitsClicked(event->pos());
-}
-
-/** Creates context menu, its actions, and wires up all the relevant signals for mouse events. */
-void UnitDisplayStatusBarControl::createContextMenu()
-{
-    menu = new QMenu(this);
-    for (UtopiacoinUnits::Unit u : UtopiacoinUnits::availableUnits())
-    {
-        QAction *menuAction = new QAction(QString(UtopiacoinUnits::longName(u)), this);
-        menuAction->setData(QVariant(u));
-        menu->addAction(menuAction);
-    }
-    connect(menu,SIGNAL(triggered(QAction*)),this,SLOT(onMenuSelection(QAction*)));
-}
-
-/** Lets the control know about the Options Model (and its signals) */
-void UnitDisplayStatusBarControl::setOptionsModel(OptionsModel *_optionsModel)
-{
-    if (_optionsModel)
-    {
-        this->optionsModel = _optionsModel;
-
-        // be aware of a display unit change reported by the OptionsModel object.
-        connect(_optionsModel,SIGNAL(displayUnitChanged(int)),this,SLOT(updateDisplayUnit(int)));
-
-        // initialize the display units label with the current value in the model.
-        updateDisplayUnit(_optionsModel->getDisplayUnit());
-    }
-}
-
-/** When Display Units are changed on OptionsModel it will refresh the display text of the control on the status bar */
-void UnitDisplayStatusBarControl::updateDisplayUnit(int newUnits)
-{
-    setText(UtopiacoinUnits::longName(newUnits));
-}
-
-/** Shows context menu with Display Unit options by the mouse coordinates */
-void UnitDisplayStatusBarControl::onDisplayUnitsClicked(const QPoint& point)
-{
-    QPoint globalPos = mapToGlobal(point);
-    menu->exec(globalPos);
-}
-
-/** Tells underlying optionsModel to update its current display unit. */
-void UnitDisplayStatusBarControl::onMenuSelection(QAction* action)
-{
-    if (action)
-    {
-        optionsModel->setDisplayUnit(action->data());
-    }
 }

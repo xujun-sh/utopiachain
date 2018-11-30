@@ -15,6 +15,7 @@
 #include <QMessageBox>
 
 #include <cmath>
+#include <qt/rpcconsole.h>
 
 static const uint64_t GB_BYTES = 1000000000LL;
 static const uint64_t BLOCK_CHAIN_SIZE = 150;
@@ -224,185 +225,15 @@ Intro::Intro(QWidget *parent) :
 
     ////////////////////////////////////////Manager/////////////////////////////////////////////
 
+
 }
 
 Intro::~Intro()
 {
     delete ui;
-    Q_EMIT stopThread();
-    thread->wait();
 }
 
-QString Intro::getDataDirectory()
-{
-    return ui->dataDirectory->text();
-}
 
-void Intro::setDataDirectory(const QString &dataDir)
-{
-    ui->dataDirectory->setText(dataDir);
-    if(dataDir == getDefaultDataDirectory())
-    {
-        ui->dataDirDefault->setChecked(true);
-        ui->dataDirectory->setEnabled(false);
-        ui->ellipsisButton->setEnabled(false);
-    } else {
-        ui->dataDirCustom->setChecked(true);
-        ui->dataDirectory->setEnabled(true);
-        ui->ellipsisButton->setEnabled(true);
-    }
-}
-
-QString Intro::getDefaultDataDirectory()
-{
-    return GUIUtil::boostPathToQString(GetDefaultDataDir());
-}
-
-bool Intro::pickDataDirectory()
-{
-    QSettings settings;
-    /* If data directory provided on command line, no need to look at settings
-       or show a picking dialog */
-    if(!gArgs.GetArg("-datadir", "").empty())
-        return true;
-    /* 1) Default data directory for operating system */
-    QString dataDir = getDefaultDataDirectory();
-    /* 2) Allow QSettings to override default dir */
-    dataDir = settings.value("strDataDir", dataDir).toString();
-
-    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
-    {
-        /* If current default data directory does not exist, let the user choose one */
-        Intro intro;
-        intro.setDataDirectory(dataDir);
-        intro.setWindowIcon(QIcon(":icons/utopiacoin"));
-
-        while(true)
-        {
-            if(!intro.exec())
-            {
-                /* Cancel clicked */
-                return false;
-            }
-            dataDir = intro.getDataDirectory();
-            try {
-                if (TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir))) {
-                    // If a new data directory has been created, make wallets subdirectory too
-                    TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir) / "wallets");
-                }
-                break;
-            } catch (const fs::filesystem_error&) {
-                QMessageBox::critical(0, tr(PACKAGE_NAME),
-                    tr("Error: Specified data directory \"%1\" cannot be created.").arg(dataDir));
-                /* fall through, back to choosing screen */
-            }
-        }
-
-        settings.setValue("strDataDir", dataDir);
-        settings.setValue("fReset", false);
-    }
-    /* Only override -datadir if different from the default, to make it possible to
-     * override -datadir in the utopiacoin.conf file in the default data directory
-     * (to be consistent with utopiacoind behavior)
-     */
-    if(dataDir != getDefaultDataDirectory())
-        gArgs.SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
-    return true;
-}
-
-void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable)
-{
-    switch(status)
-    {
-    case FreespaceChecker::ST_OK:
-        //ui->errorMessage->setText(message);
-        //ui->errorMessage->setStyleSheet("");
-        break;
-    case FreespaceChecker::ST_ERROR:
-        //ui->errorMessage->setText(tr("Error") + ": " + message);
-        //ui->errorMessage->setStyleSheet("QLabel { color: #800000 }");
-        break;
-    }
-    /* Indicate number of bytes available */
-    if(status == FreespaceChecker::ST_ERROR)
-    {
-        ;//ui->freeSpace->setText("");
-    } else {
-        QString freeString = tr("%n GB of free space available", "", bytesAvailable/GB_BYTES);
-        if(bytesAvailable < requiredSpace * GB_BYTES)
-        {
-            freeString += " " + tr("(of %n GB needed)", "", requiredSpace);
-            //ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
-        } else {
-            ;//ui->freeSpace->setStyleSheet("");
-        }
-        ;//ui->freeSpace->setText(freeString + ".");
-    }
-    /* Don't allow confirm in ERROR state */
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(status != FreespaceChecker::ST_ERROR);
-}
-
-void Intro::on_dataDirectory_textChanged(const QString &dataDirStr)
-{
-    /* Disable OK button until check result comes in */
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
-    checkPath(dataDirStr);
-}
-
-void Intro::on_ellipsisButton_clicked()
-{
-    QString dir = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(0, "Choose data directory", ui->dataDirectory->text()));
-    if(!dir.isEmpty())
-        ui->dataDirectory->setText(dir);
-}
-
-void Intro::on_dataDirDefault_clicked()
-{
-    setDataDirectory(getDefaultDataDirectory());
-}
-
-void Intro::on_dataDirCustom_clicked()
-{
-    ui->dataDirectory->setEnabled(true);
-    ui->ellipsisButton->setEnabled(true);
-}
-
-void Intro::startThread()
-{
-    thread = new QThread(this);
-    FreespaceChecker *executor = new FreespaceChecker(this);
-    executor->moveToThread(thread);
-
-    connect(executor, SIGNAL(reply(int,QString,quint64)), this, SLOT(setStatus(int,QString,quint64)));
-    connect(this, SIGNAL(requestCheck()), executor, SLOT(check()));
-    /*  make sure executor object is deleted in its own thread */
-    connect(this, SIGNAL(stopThread()), executor, SLOT(deleteLater()));
-    connect(this, SIGNAL(stopThread()), thread, SLOT(quit()));
-
-    thread->start();
-}
-
-void Intro::checkPath(const QString &dataDir)
-{
-    mutex.lock();
-    pathToCheck = dataDir;
-    if(!signalled)
-    {
-        signalled = true;
-        Q_EMIT requestCheck();
-    }
-    mutex.unlock();
-}
-
-QString Intro::getPathToCheck()
-{
-    QString retval;
-    mutex.lock();
-    retval = pathToCheck;
-    signalled = false; /* new request can be queued now */
-    mutex.unlock();
-    return retval;
-}
 
 void Intro::recipientitem1(int i)
 {
@@ -508,23 +339,43 @@ void Intro::on_pushButton_reviewsearchsetting_clicked()
 void Intro::on_pushButton_getsearchingresult_clicked()
 {    // search required and show the result in the textEdit.
      // lineEdit_search input is exclusived with all other settings (Asset, Time, Type, and or Amount).
+    b_assetsymbol = ui->comboBox_asset->currentText();
+    b_time =        ui->comboBox_time->currentText();
+    b_type =        ui->comboBox_type->currentText();
+    b_amount =      ui->lineEdit_amount->text();
+    b_search =      ui->lineEdit_search->text();
     QString b_searchresult = "";
     if (b_search != ""){   // for search input only
         if (b_search.length() == 64){
              if (b_search.left(2) == "00"){
-//                 bsearchresult = getblock(b_search, 1);
-
+//               bsearchresult = getblock(b_search, 1);                                                //RPC
                  return;}
              else {
-//                 b_searchresult = getblock(getblockhash(b_search), 1);
-
+//               b_searchresult = getblock(getblockhash(b_search), 1);                                 //RPC
                  if (b_searchresult.isNull()){
-//                     b_searchresult = getrawtransaction(b_search, 1);
-                  }     }                 }  }
-    else if (b_time == "Opening" && ui->comboBox_type->currentIndex() < 3) {     }
-    else if (b_time != "Opening" && ui->comboBox_type->currentIndex() > 3 && b_amount == "") {   }
+//                   b_searchresult = getrawtransaction(b_search, 1);                                  //RPC
+                  }
+             }
+        }
+    }
+    else if (b_time == "Opening" && ui->comboBox_type->currentIndex() < 3) {
+
+    }
+    else if (b_time != "Opening" && ui->comboBox_type->currentIndex() > 3 && b_amount == "") {
+
+    }
+	std::string result;
+        std::string executableCommand = "listsinceblock (getbestblockhash) \n";
+
+	if(!RPCConsole::RPCExecuteCommandLine(result, executableCommand))
+        {
+            result = "Parse error: unbalanced ' or \"";
+        }
+
+        //Q_EMIT reply(RPCConsole::CMD_REPLY, QString::fromStdString(result));
+	ui->textEdit_resultwindow->setText(QString::fromStdString(result));
+    //ui->textEdit_resultwindow->setText(b_search);
      // rpc: listsinceblock (getbestblockhash);                       // default result for browser
-    ui->textEdit_resultwindow->setText("search results..");	
 }
 
 // show textEdit with :  search result of Block, Transaction, or Address. Default show the Opening Transaction of all asset and all amount.
@@ -545,9 +396,23 @@ void Intro::on_pushButton_sendingaddressbook_clicked()
 ///////////////////// Exchange page //////////////////////////////////////////////////////////
 void Intro::on_tabWidget_tabBarClicked(int index)
 {
-    ui->tabWidget_exchange->setCurrentIndex(0);                                                  // when tabWidget_exchange clicked, always open the Sending page first.
+    ui->tabWidget_exchange->setCurrentIndex(0);                                              // when tabWidget_exchange clicked, always open the Sending page first.
     recipientitem1(1);
     ui->label_totalrecipientnumber->setText("1 Recipient");
+
+            ///////////////// Manager///////////////
+//       QString versionstr = getnetworkinfo()[version];                                     // RPC
+//       ui->lineEdit_version->setText(versionstr);
+//       QString therunningtimestr = uptime;                                                 // RPC
+//       ui->lineEdit_therunningtime->setText(therunningtimestr);
+//       QString currentnumberofblockstr = getblockchaininfo()[blocks];                      // RPC
+//       ui->lineEdit_currentnumberofblock->setText(currentnumberofblockstr);
+//       QString lastblocktimestr = getblockchaininfo()[mediantime];                         // RPC
+//       ui->lineEdit_lastblocktime->setText(lastblocktimestr);
+//       QString currentnumberoftransactionstr = getmempoolinfo()[size];                     // RPC
+//       ui->lineEdit_currentnumberoftransaction->setText(currentnumberoftransactionstr);
+//       QString memoryusagestr = getmempoolinfo()[usage];                                   // RPC
+//       ui->lineEdit_memoryusage->setText(memoryusagestr);
 }
 
               /////// Sending page ///////
@@ -589,9 +454,9 @@ void Intro::on_pushButton_reviewsendingorder_clicked()
     int nullrecivientnum = 0;
     sendingsummary += QString("Send the asset symbol <%1> to:\n").arg(symbol);
     for (int i = 1; i<=ui->tableWidget_addmorerecipient->rowCount()/3; ++i){
-        QWidget   *widgetaddress=ui->tableWidget_addmorerecipient->cellWidget((i-1)*3+1,1);    //获得widget
+        QWidget   *widgetaddress=ui->tableWidget_addmorerecipient->cellWidget((i-1)*3+1,1);    //??widget
         QWidget   *widgetamount=ui->tableWidget_addmorerecipient->cellWidget((i-1)*3+2,1);
-        QLineEdit *recipientaddress1=(QLineEdit*)widgetaddress;                                //强制转化为QLineEdit
+        QLineEdit *recipientaddress1=(QLineEdit*)widgetaddress;                                //?????QLineEdit
         QLineEdit *recipientamount1=(QLineEdit*)widgetamount;
         QString   tempaddress = recipientaddress1->text();
         QString   tempamount = recipientamount1->text();
@@ -601,7 +466,7 @@ void Intro::on_pushButton_reviewsendingorder_clicked()
             sendingsummary += QString("   %2: address/amount  (%3 / %4).\n").arg(i).arg(tempaddress).arg(tempamount);
             sendingamountsummary += tempamount.toDouble();  }
         else { nullrecivientnum++;                          }               }
-    QString a=QString::number(sendingamountsummary,'f',8);
+    QString a = QString::number(sendingamountsummary,'f',8);
     sendingsummary += QString("The total sending address is (%1), the total sending amount is (%2).").arg(ui->tableWidget_addmorerecipient->rowCount()/3-nullrecivientnum).arg(a);
     if (sendingamountsummary > 0) {
         ui->textEdit_sendingsummary->setText(sendingsummary);
@@ -764,43 +629,203 @@ void Intro::on_pushButton_postannouncement_clicked()
 }
 
 ///////////////////////// Manager page ///////////////////////////////////////////
+void Intro::on_pushButton_backupwallet_clicked()
+{    // backup your wallet
+    QString directorystr = ui->lineEdit_thefiledirectory->text();
+    QString result = "1";
+//    result = backupwallet directorystr;                                                 //RPC
+    if (result == "")
+    QMessageBox::warning(this,"","wallet is backuped.");
+}
+void Intro::on_pushButton_encryptwallet_clicked()
+{    // encrypt your wallet
+    QString thepassphrasestr = ui->lineEdit_thepassphrase->text();
+    QString result = "1";
+//    result = encryptwallet thepassphrasestr;                                             //RPC
+    if (result == "")
+        QMessageBox::warning(this,"","wallet encrypted; Bitcoin server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.");
+}
+void Intro::on_pushButton_changepassphrase_clicked()
+{    // change your wallet passphrase
+    QString oldpassphrasestr=ui->lineEdit_oldpassphrase->text();
+    QString newpassphrasestr=ui->lineEdit_newpassphrase->text();
+    QString result = "1";
+//    result = walletpassphrasechange oldpassphrasestr newpassphrasestr;                   //RPC
+    if (result == "")
+        QMessageBox::warning(this,"","pass phrase changed.");
+}
+
+void Intro::on_pushButton_signmessage_clicked()
+{    // open sign message window     in base64
+    QString addresssignstr = ui->lineEdit_addresssign->text();
+    QString messagesignstr=ui->textEdit_messagesign->toPlainText();
+    QString result = "";
+//    result = signmessage addresssignstr messagesignstr;                                  //RPC
+    if (result != "")
+        ui->lineEdit_signaturesign->setText(result);
+}
+void Intro::on_pushButton_verifymessage_clicked()
+{    // open verify message window, like File->Verify message. ----signverifymessagedialog.ui
+    QString addressverifystr = ui->lineEdit_addressverify->text();
+    QString signatureverifystr = ui->lineEdit_signatureverify->text();
+    QString messageverifystr = ui->textEdit_messageverify->toPlainText();
+    QString result = "false";
+//    result = verifymessage addressverifystr signatureverifystr messageverifystr         //RPC
+    if (result == "true")
+        QMessageBox::warning(this, "", "Message Verified.");
+    else
+        QMessageBox::warning(this, "", "Message Not Verified.");
+}
+void Intro::on_checkBox_unactivenetwork_stateChanged(int arg1)
+{
+    if (arg1 == 0){
+//        setnetworkactive true;                                                         // RPC
+    }else{
+//        setnetworkactive false;                                                        //RPC
+    }
+}
+void Intro::on_pushButton_networkinformation_clicked()
+{                   // open network information window, like Help->Debug Window->Information and Network Traffic part
+//    QString networkinginfomationstr = getnetworkinfo;                                   //RPC
+//    QMessageBox::information(this, tr("Networking Information:\n"), tr("%1").arg(networkinginfomationstr));
+}
+void Intro::on_pushButton_managepeers_clicked()
+{                     // open mangae peers window
+//    QString managepeersstr = getpeerinfo;                                                //RPC
+//    QMessageBox::information(this, tr("Peers Information:\n"), tr("%1").arg(managepeersstr));
+}
+void Intro::on_pushButton_bannedlist_clicked()
+{
+//    QString bannedliststr = listbanned;                                                  //RPC
+//    QMessageBox::information(this, tr("Networking Information:\n"), tr("%1").arg(bannedliststr));
+}
+void Intro::on_pushButton_addnode_clicked()
+{
+      QString addstr = ui->comboBox_addnode->currentText();
+      QString nodestr = ui->lineEdit_addnode->text();
+      if (addstr == "To Add Node:"){
+          addstr = "add";
+
+      }else if(addstr == "Remove Node:"){
+          addstr = "remove";
+      }else {
+          addstr = "onetry";
+      }
+//      addnode nodestr addstr;                                                            //RPC
+}
+void Intro::on_pushButton_disconnect_clicked()
+{
+       QString nodestr = ui->lineEdit_disconnectnode->text();
+//       disconnectnode nodestr;                                                          //RPC
+}
+void Intro::on_pushButton_addbanned_clicked()
+{
+    QString addstr = ui->comboBox_setbannedip->currentText();
+    QString bannedstr = ui->lineEdit_setbannedrip->text();
+    QString timestr = ui->lineEdit_bannedtime->text();
+    if (addstr == "Add IP/Subnet to banned list:") {
+        addstr = "add";
+    }else {
+        addstr = "remove";
+    }
+//    setban bannedstr addstr timestr;                                                     //RPC
+}
+void Intro::on_pushButton_clearallbanned_clicked()
+{
+//    clearbanned;                                                                         //RPC
+}
+
+void Intro::startThread()
+{
+    thread = new QThread(this);
+    FreespaceChecker *executor = new FreespaceChecker(this);
+    executor->moveToThread(thread);
+
+    connect(executor, SIGNAL(reply(int,QString,quint64)), this, SLOT(setStatus(int,QString,quint64)));
+    connect(this, SIGNAL(requestCheck()), executor, SLOT(check()));
+    /*  make sure executor object is deleted in its own thread */
+    connect(this, SIGNAL(stopThread()), executor, SLOT(deleteLater()));
+    connect(this, SIGNAL(stopThread()), thread, SLOT(quit()));
+
+    thread->start();
+}
+
+void Intro::checkPath(const QString &dataDir)
+{
+    mutex.lock();
+    pathToCheck = dataDir;
+    if(!signalled)
+    {
+        signalled = true;
+        Q_EMIT requestCheck();
+    }
+    mutex.unlock();
+}
+
+QString Intro::getPathToCheck()
+{
+    QString retval;
+    mutex.lock();
+    retval = pathToCheck;
+    signalled = false; /* new request can be queued now */
+    mutex.unlock();
+    return retval;
+}
+
+void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable)
+{
+   ;
+}
+
+void Intro::on_dataDirectory_textChanged(const QString &dataDirStr)
+{
+    /* Disable OK button until check result comes in */
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+    checkPath(dataDirStr);
+}
+
+void Intro::on_ellipsisButton_clicked()
+{
+    QString dir = QDir::toNativeSeparators(QFileDialog::getExistingDirectory(0, "Choose data directory", ui->dataDirectory->text()));
+    if(!dir.isEmpty())
+        ui->dataDirectory->setText(dir);
+}
+
+void Intro::on_dataDirDefault_clicked()
+{
+    setDataDirectory(getDefaultDataDirectory());
+}
+
+void Intro::on_dataDirCustom_clicked()
+{
+    ui->dataDirectory->setEnabled(true);
+    ui->ellipsisButton->setEnabled(true);
+}
+
+void Intro::setDataDirectory(const QString &dataDir)
+{
+    ui->dataDirectory->setText(dataDir);
+    if(dataDir == getDefaultDataDirectory())
+    {
+        ui->dataDirDefault->setChecked(true);
+        ui->dataDirectory->setEnabled(false);
+        ui->ellipsisButton->setEnabled(false);
+    } else {
+        ui->dataDirCustom->setChecked(true);
+        ui->dataDirectory->setEnabled(true);
+        ui->ellipsisButton->setEnabled(true);
+    }
+}
+
+QString Intro::getDefaultDataDirectory()
+{
+    return GUIUtil::boostPathToQString(GetDefaultDataDir());
+}
+
+///////////////////////// Manager page ///////////////////////////////////////////
 void Intro::on_pushButton_leaveutopiamarketplace_clicked()
 {   // close utopia market system and leave the marketplace
     close();
 
 }
 
-void Intro::on_pushButton_backupwallet_clicked()
-{    // backup your wallet, like former File->Backup Wallet.
-
-}
-
-void Intro::on_pushButton_encryptwallet_clicked()
-{    // encrypt your wallet, like Setting->Encrypt Wallet.
-
-}
-
-void Intro::on_pushButton_changepassphrase_clicked()
-{    // change your wallet passphrase, like Setting->Change Passphrase. ---- askpassphrasedialog.ui
-
-}
-
-void Intro::on_pushButton_signmessage_clicked()
-{    // open sign message window, like File->Sign message.  ---- signverifymessagedialog.ui
-
-}
-
-void Intro::on_pushButton_verifymessage_clicked()
-{   // open verify message window, like File->Verify message. ----signverifymessagedialog.ui
-
-}
-
-void Intro::on_pushButton_networkinformation_clicked()
-{   // open network information window, like Help->Debug Window->Information and Network Traffic part
-
-}
-
-void Intro::on_pushButton_managepeers_clicked()
-{   // open mangae peers window
-
-}

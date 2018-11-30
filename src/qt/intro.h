@@ -95,14 +95,22 @@ private Q_SLOTS:
     void on_pushButton_postannouncement_clicked();
 
     ///////////////////// Manager page //////////////////////////
-    void on_pushButton_leaveutopiamarketplace_clicked();
     void on_pushButton_backupwallet_clicked();
     void on_pushButton_encryptwallet_clicked();
     void on_pushButton_changepassphrase_clicked();
+
     void on_pushButton_signmessage_clicked();
     void on_pushButton_verifymessage_clicked();
+
+    void on_checkBox_unactivenetwork_stateChanged(int arg1);
     void on_pushButton_networkinformation_clicked();
     void on_pushButton_managepeers_clicked();
+    void on_pushButton_bannedlist_clicked();
+    void on_pushButton_addnode_clicked();
+    void on_pushButton_disconnect_clicked();
+    void on_pushButton_addbanned_clicked();
+    void on_pushButton_clearallbanned_clicked();
+    void on_pushButton_leaveutopiamarketplace_clicked();
 
 private:
     Ui::Intro *ui;

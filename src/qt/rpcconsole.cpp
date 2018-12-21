@@ -508,6 +508,11 @@ RPCConsole::~RPCConsole()
     delete ui;
 }
 
+void RPCConsole::receiveCommand(const QString &command){
+	Q_EMIT cmdRequest(command);
+}
+
+
 bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
 {
     if(event->type() == QEvent::KeyPress) // Special key handling
@@ -805,6 +810,8 @@ void RPCConsole::message(int category, const QString &message, bool html)
         out += GUIUtil::HtmlEscape(message, false);
     out += "</td></tr></table>";
     ui->messagesWidget->append(out);
+Q_EMIT sendOutput(out);
+
 }
 
 void RPCConsole::updateNetworkState()

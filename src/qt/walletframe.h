@@ -14,6 +14,7 @@ class PlatformStyle;
 class SendCoinsRecipient;
 class WalletModel;
 class WalletView;
+class RPCConsole;
 
 QT_BEGIN_NAMESPACE
 class QStackedWidget;
@@ -36,7 +37,7 @@ public:
 
     void setClientModel(ClientModel *clientModel);
 
-    bool addWallet(const QString& name, WalletModel *walletModel);
+    bool addWallet(const QString& name, WalletModel *walletModel,  RPCConsole *rpcconsole);
     bool setCurrentWallet(const QString& name);
     bool removeWallet(const QString &name);
     void removeAllWallets();

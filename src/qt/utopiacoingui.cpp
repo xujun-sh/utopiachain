@@ -175,7 +175,7 @@ UtopiacoinGUI::UtopiacoinGUI(const PlatformStyle *_platformStyle, const NetworkS
     createActions();
 
     // Create application menu bar
-    createMenuBar();
+    //createMenuBar();
 
     // Create the toolbars
     createToolBars();
@@ -534,7 +534,7 @@ bool UtopiacoinGUI::addWallet(const QString& name, WalletModel *walletModel)
     if(!walletFrame)
         return false;
     setWalletActionsEnabled(true);
-    return walletFrame->addWallet(name, walletModel);
+    return walletFrame->addWallet(name, walletModel,rpcConsole);
 }
 
 bool UtopiacoinGUI::setCurrentWallet(const QString& name)

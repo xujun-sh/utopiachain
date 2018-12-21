@@ -12,6 +12,7 @@
 
 #include <QHBoxLayout>
 #include <QLabel>
+#include <qt/rpcconsole.h>
 
 WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, UtopiacoinGUI *_gui) :
     QFrame(_gui),
@@ -39,7 +40,7 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
     this->clientModel = _clientModel;
 }
 
-bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
+bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel, RPCConsole *rpcconsole)
 {
     if (!gui || !clientModel || !walletModel || mapWalletViews.count(name) > 0)
         return false;
@@ -50,6 +51,8 @@ bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
     walletView->setWalletModel(walletModel);
     walletView->showOutOfSyncWarning(bOutOfSync);
 
+walletView->setRPCConsole(rpcconsole);
+	
      /* TODO we should goto the currently selected page once dynamically adding wallets is supported */
     walletView->gotoOverviewPage();
     walletStack->addWidget(walletView);
@@ -60,6 +63,8 @@ bool WalletFrame::addWallet(const QString& name, WalletModel *walletModel)
 
     connect(walletView, SIGNAL(outOfSyncWarningClicked()), this, SLOT(outOfSyncWarningClicked()));
 
+//walletView->getOverviewPage()->setRPCConsole(rpcconsole);
+	
     return true;
 }
 

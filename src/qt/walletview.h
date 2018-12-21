@@ -19,6 +19,7 @@ class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
 class AddressBookPage;
+class RPCConsole;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -54,6 +55,10 @@ public:
 
     void showOutOfSyncWarning(bool fShow);
 
+void setRPCConsole(RPCConsole *_rpcconsole);
+
+OverviewPage* getOverviewPage();
+	
 private:
     ClientModel *clientModel;
     WalletModel *walletModel;

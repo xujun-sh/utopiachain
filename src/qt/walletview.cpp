@@ -18,7 +18,7 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/transactionview.h>
 #include <qt/walletmodel.h>
-
+#include <qt/rpcconsole.h>
 #include <ui_interface.h>
 
 #include <QAction>
@@ -105,12 +105,22 @@ void WalletView::setUtopiacoinGUI(UtopiacoinGUI *gui)
     }
 }
 
+
+OverviewPage* WalletView::getOverviewPage(){
+	return overviewPage;
+}
+
+
 void WalletView::setClientModel(ClientModel *_clientModel)
 {
     this->clientModel = _clientModel;
 
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
+}
+
+void WalletView::setRPCConsole(RPCConsole *_rpcconsole){
+	overviewPage->setRPCConsole(_rpcconsole);
 }
 
 void WalletView::setWalletModel(WalletModel *_walletModel)
